@@ -34,7 +34,8 @@
                 <th>#</th>
                 <th>Ministry</th>
                 <th>Comment</th>
-                <th>Timestamp</th>
+                <th>Date</th>
+                <th>Time</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -143,11 +144,13 @@
                 return;
             }
 
+            const now = new Date();
             const entry = {
                 id: Date.now(),
                 ministry: ministry,
                 comment: text,
-                timestamp: new Date().toLocaleString()
+                date: now.toLocaleDateString(),
+                time: now.toLocaleTimeString()
             };
 
             comments.push(entry);
@@ -169,7 +172,8 @@
                     '<td>' + (i + 1) + '</td>' +
                     '<td>' + escapeHtml(c.ministry) + '</td>' +
                     '<td>' + escapeHtml(c.comment) + '</td>' +
-                    '<td>' + c.timestamp + '</td>' +
+                    '<td>' + c.date + '</td>' +
+                    '<td>' + c.time + '</td>' +
                     '<td><button onclick="deleteComment(' + c.id + ')">Delete</button></td>';
                 commentsBody.appendChild(tr);
             });
