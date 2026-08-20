@@ -142,7 +142,7 @@
                     'Content-Type': 'application/json',
                     'apikey': SUPABASE_ANON_KEY,
                     'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-                    'Prefer': 'return=representation'
+                    'Prefer': 'return=minimal'
                 },
                 body: JSON.stringify(row)
             });
@@ -152,7 +152,7 @@
                 throw new Error('Supabase error (' + res.status + '): ' + errorBody);
             }
 
-            return await res.json();
+            return true;
         }
 
         // --- Submit handler ---
