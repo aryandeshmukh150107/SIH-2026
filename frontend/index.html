@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministry Comment Portal</title>
+</head>
+<body>
+    <h1>Ministry Comment Portal</h1>
+
+    <form id="commentForm">
+        <div>
+            <label for="ministrySelect"><strong>Select Ministry:</strong></label><br>
+            <select id="ministrySelect" required>
+                <option value="" disabled selected>-- Select a Ministry --</option>
+            </select>
+        </div>
+        <br>
+        <div>
+            <label for="commentBox"><strong>Your Comment:</strong></label><br>
+            <textarea id="commentBox" rows="5" cols="60" placeholder="Type your comment here..." required></textarea>
+        </div>
+        <br>
+        <button type="submit" id="submitBtn">Submit Comment</button>
+    </form>
+
+    <p id="statusMsg"></p>
+
+    <hr>
+    <h2>Submitted Comments (<span id="commentCount">0</span>)</h2>
+    <table id="commentsTable" border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Ministry</th>
+                <th>Comment</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="commentsBody"></tbody>
+    </table>
+
+    <br>
+    <button id="exportBtn" disabled>Export as JSON</button>
+    <button id="clearBtn" disabled>Clear All</button>
+
+    <script>
+        // --- Supabase config ---
+        const SUPABASE_URL = 'https://nmbiilbiyxgfsfusnzht.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmlpbGJpeXhnZnNmdXNuemh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMzIwMjQsImV4cCI6MjEwMjgwODAyNH0.MNGMaHkDVvnn_u6XV_JVX6Uo-Ec3S4GFFP6gRmA-g84';
+        const TABLE_NAME = 'comments';
+
+        const MINISTRIES = [
+            "Ministry of Agriculture and Farmers' Welfare",
+            "Ministry of Ayush",
+            "Ministry of Chemicals and Fertilizers",
+            "Ministry of Civil Aviation",
+            "Ministry of Coal",
+            "Ministry of Commerce and Industry",
+            "Ministry of Communications",
+            "Ministry of Consumer Affairs, Food and Public Distribution",
+            "Ministry of Cooperation",
+            "Ministry of Corporate Affairs",
+            "Ministry of Culture",
+            "Ministry of Defence",
+            "Ministry of Development of North Eastern Region",
+            "Ministry of Earth Sciences",
+            "Ministry of Education",
+            "Ministry of Electronics and Information Technology",
+            "Ministry of Environment, Forest and Climate Change",
+            "Ministry of External Affairs",
+            "Ministry of Finance",
+            "Ministry of Fisheries, Animal Husbandry and Dairying",
+            "Ministry of Food Processing Industries",
+            "Ministry of Health and Family Welfare",
+            "Ministry of Heavy Industries",
+            "Ministry of Home Affairs",
+            "Ministry of Housing and Urban Affairs",
+            "Ministry of Information and Broadcasting",
+            "Ministry of Jal Shakti",
+            "Ministry of Labour and Employment",
+            "Ministry of Law and Justice",
+            "Ministry of Micro, Small and Medium Enterprises",
+            "Ministry of Mines",
+            "Ministry of Minority Affairs",
+            "Ministry of New and Renewable Energy",
+            "Ministry of Panchayati Raj",
+            "Ministry of Parliamentary Affairs",
+            "Ministry of Personnel, Public Grievances and Pensions",
+            "Ministry of Petroleum and Natural Gas",
+            "Ministry of Ports, Shipping and Waterways",
+            "Ministry of Power",
+            "Ministry of Railways",
+            "Ministry of Road Transport and Highways",
+            "Ministry of Rural Development",
+            "Ministry of Science and Technology",
+            "Ministry of Skill Development and Entrepreneurship",
+            "Ministry of Social Justice and Empowerment",
+            "Ministry of Statistics and Programme Implementation",
+            "Ministry of Steel",
+            "Ministry of Textiles",
+            "Ministry of Tourism",
+            "Ministry of Tribal Affairs",
+            "Ministry of Women and Child Development",
+            "Ministry of Youth Affairs and Sports",
+            "Prime Minister's Office",
+            "Cabinet Secretariat",
+            "NITI Aayog"
+        ];
+
+        // --- State ---
+        let comments = [];
+
+        // --- DOM refs ---
+        const form = document.getElementById('commentForm');
+        const ministrySelect = document.getElementById('ministrySelect');
+        const commentBox = document.getElementById('commentBox');
+        const statusMsg = document.getElementById('statusMsg');
+        const submitBtn = document.getElementById('submitBtn');
+        const commentsBody = document.getElementById('commentsBody');
+        const commentCount = document.getElementById('commentCount');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // --- Populate dropdown ---
+        MINISTRIES.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            ministrySelect.appendChild(opt);
+        });
+
+        // --- Supabase POST helper ---
+        async function insertToSupabase(row) {
+            const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(row)
+            });
+
+            if (!res.ok) {
+                const errorBody = await res.text();
+                throw new Error('Supabase error (' + res.status + '): ' + errorBody);
+            }
+
+            return await res.json();
+        }
+
+        // --- Submit handler ---
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const ministry = ministrySelect.value;
+            const text = commentBox.value.trim();
+
+            if (!ministry) {
+                statusMsg.textContent = '⚠ Please select a ministry.';
+                statusMsg.style.color = 'red';
+                return;
+            }
+            if (!text) {
+                statusMsg.textContent = '⚠ Please enter a comment.';
+                statusMsg.style.color = 'red';
+                return;
+            }
+
+            const now = new Date();
+            // Format date as YYYY-MM-DD (Supabase date type)
+            const dateStr = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0');
+            // Format time as HH:MM:SS (Supabase time type)
+            const timeStr = String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+
+            const row = {
+                ministry: ministry,
+                comment_date: dateStr,
+                comment_time: timeStr,
+                comment_text: text
+            };
+
+            // Disable button while sending
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            statusMsg.textContent = '';
+
+            try {
+                const inserted = await insertToSupabase(row);
+
+                // Add to local list (use returned data if available)
+                const entry = inserted[0] || row;
+                entry._localId = Date.now();
+                comments.push(entry);
+                renderComments();
+
+                // Reset form
+                commentBox.value = '';
+                ministrySelect.selectedIndex = 0;
+                statusMsg.textContent = '✅ Comment submitted and saved to database!';
+                statusMsg.style.color = 'green';
+            } catch (err) {
+                statusMsg.textContent = '❌ Failed to save: ' + err.message;
+                statusMsg.style.color = 'red';
+                console.error(err);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Comment';
+            }
+        });
+
+        // --- Render table ---
+        function renderComments() {
+            commentsBody.innerHTML = '';
+            comments.forEach((c, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + (i + 1) + '</td>' +
+                    '<td>' + escapeHtml(c.ministry) + '</td>' +
+                    '<td>' + escapeHtml(c.comment_text) + '</td>' +
+                    '<td>' + (c.comment_date || '') + '</td>' +
+                    '<td>' + (c.comment_time || '') + '</td>' +
+                    '<td><button onclick="deleteComment(' + (c._localId || i) + ')">Delete</button></td>';
+                commentsBody.appendChild(tr);
+            });
+            commentCount.textContent = comments.length;
+            exportBtn.disabled = comments.length === 0;
+            clearBtn.disabled = comments.length === 0;
+        }
+
+        // --- Delete single comment (local only) ---
+        function deleteComment(id) {
+            comments = comments.filter(c => (c._localId || 0) !== id);
+            renderComments();
+            statusMsg.textContent = 'Comment removed from local view.';
+            statusMsg.style.color = 'orange';
+        }
+
+        // --- Clear all (local only) ---
+        clearBtn.addEventListener('click', function () {
+            if (confirm('Clear all comments from local view?')) {
+                comments = [];
+                renderComments();
+                statusMsg.textContent = 'Local view cleared. Database records remain.';
+                statusMsg.style.color = 'orange';
+            }
+        });
+
+        // --- Export JSON ---
+        exportBtn.addEventListener('click', function () {
+            const blob = new Blob([JSON.stringify(comments, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'comments_' + Date.now() + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            statusMsg.textContent = 'Exported ' + comments.length + ' comment(s) as JSON.';
+            statusMsg.style.color = 'green';
+        });
+
+        // --- Utility ---
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
