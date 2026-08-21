@@ -71,7 +71,36 @@ app.add_middleware(
 @app.get("/health")
 def health_check():
     """Health check endpoint for Railway deployment probes."""
-    return {"status": "ok", "sentiment_ready": _sentiment_ready}
+    return {
+        "status": "ok",
+        "sentiment_ready": _sentiment_ready,
+        "supabase_url_set": bool(os.environ.get("SUPABASE_URL")),
+        "supabase_key_set": bool(os.environ.get("SUPABASE_SERVICE_KEY")),
+    }
+
+
+@app.get("/debug-sentiment")
+def debug_sentiment():
+    """
+    DEBUG ONLY: Runs the sentiment pipeline synchronously in the request thread.
+    Returns the full result or error traceback so we can diagnose Railway failures.
+    """
+    import traceback
+    if not _sentiment_ready:
+        return {"error": "Pipeline not importable", "detail": _sentiment_error}
+    try:
+        _run_pipeline()
+        return {"status": "ok", "message": "Pipeline completed successfully"}
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(exc),
+                "traceback": traceback.format_exc(),
+                "supabase_url": os.environ.get("SUPABASE_URL", "NOT SET"),
+                "supabase_key_present": bool(os.environ.get("SUPABASE_SERVICE_KEY")),
+            }
+        )
 
 
 class CleanRequest(BaseModel):
