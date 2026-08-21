@@ -141,49 +141,52 @@ def update_row(row_id, scores: dict) -> None:
 
 def run_pipeline() -> None:
     """
-    Main entry point.  Scores all unscored rows in Supabase.
+    Main entry point. Scores all unscored rows in Supabase.
     Safe to call multiple times; model and client are created once.
     """
-    print("[sentiment] Fetching unscored rows from '" + TABLE + "' ...")
-    rows = fetch_unprocessed_rows()
+    try:
+        print("[sentiment] Fetching unscored rows from '" + TABLE + "' ...")
+        rows = fetch_unprocessed_rows()
 
-    if not rows:
-        print("[sentiment] No unscored rows found. Nothing to do.")
-        return
+        if not rows:
+            print("[sentiment] No unscored rows found. Nothing to do.")
+            return
 
-    print("[sentiment] Found " + str(len(rows)) + " row(s) to process.")
+        print("[sentiment] Found " + str(len(rows)) + " row(s) to process.")
 
-    success = 0
-    skipped = 0
-    errors = 0
+        success = 0
+        skipped = 0
+        errors = 0
 
-    for row in rows:
-        row_id = row.get(PK_COL)
-        text = row.get(TEXT_COL)
+        for row in rows:
+            row_id = row.get(PK_COL)
+            text = row.get(TEXT_COL)
 
-        scores = analyze(text)
-        if scores is None:
-            print("[sentiment]   [SKIP] id=" + str(row_id) + " -- preprocessing text is null/empty")
-            skipped += 1
-            continue
+            scores = analyze(text)
+            if scores is None:
+                print("[sentiment]   [SKIP] id=" + str(row_id) + " -- preprocessing text is null/empty")
+                skipped += 1
+                continue
 
-        try:
-            update_row(row_id, scores)
-            print(
-                "[sentiment]   [OK]   id=" + str(row_id) +
-                " -> type=" + scores[TYPE_COL] +
-                "  score=" + str(scores[SCORE_COL])
-            )
-            success += 1
-        except Exception as exc:
-            print("[sentiment]   [ERR]  id=" + str(row_id) + " -- failed to update: " + str(exc))
-            errors += 1
+            try:
+                update_row(row_id, scores)
+                print(
+                    "[sentiment]   [OK]   id=" + str(row_id) +
+                    " -> type=" + scores[TYPE_COL] +
+                    "  score=" + str(scores[SCORE_COL])
+                )
+                success += 1
+            except Exception as exc:
+                print("[sentiment]   [ERR]  id=" + str(row_id) + " -- failed to update: " + str(exc))
+                errors += 1
 
-    print(
-        "[sentiment] Done.  OK: " + str(success) +
-        "  skipped: " + str(skipped) +
-        "  errors: " + str(errors)
-    )
+        print(
+            "[sentiment] Done.  OK: " + str(success) +
+            "  skipped: " + str(skipped) +
+            "  errors: " + str(errors)
+        )
+    except Exception as fatal_exc:
+        print("[sentiment] [FATAL ERROR] Pipeline execution failed:", fatal_exc)
 
 
 if __name__ == "__main__":
