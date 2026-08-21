@@ -21,7 +21,9 @@ def analyze_sentiment(text):
 if __name__ == "__main__":
 
     comments = [
-        "This policy is excellent and will really help citizens.",
+        "i don't like this policy! it affects 25% of people? but the idea is good :)",
+        "hello i hate this but i love how it was done in low budget 20$ [rolling on the floor laughing] [rolling on the floor laughing] [rolling on the floor laughing] [rolling on the floor laughing] [red heart]",
+        "idk man maybe its bad or it is a waste of money lol",
         "The policy is completely useless and poorly implemented.",
         "The policy is acceptable but there are some concerns.",
         "I like this work but the government spent ₹24cr on it."
