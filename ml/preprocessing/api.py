@@ -1,6 +1,8 @@
 import sys
 import os
+import asyncio
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 # Ensure we can import text_cleaner when running directly or as a module
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +30,33 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from text_cleaner import clean_text
 
-app = FastAPI(title="SIH Text Preprocessor API")
+# ---------------------------------------------------------------------------
+# Background cron: run sentiment pipeline every 30 seconds
+# ---------------------------------------------------------------------------
+SENTIMENT_CRON_INTERVAL = 30  # seconds
+
+async def _sentiment_cron_loop():
+    """Background loop that scores unprocessed rows every 30 seconds."""
+    print(f"[cron] Sentiment cron started (interval={SENTIMENT_CRON_INTERVAL}s)")
+    while True:
+        await asyncio.sleep(SENTIMENT_CRON_INTERVAL)
+        if _sentiment_ready:
+            try:
+                # Run the synchronous pipeline in a thread to avoid blocking the event loop
+                await asyncio.get_event_loop().run_in_executor(None, _run_pipeline)
+            except Exception as exc:
+                print(f"[cron] Sentiment cron error: {exc}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Start the sentiment cron on server boot, cancel on shutdown."""
+    task = asyncio.create_task(_sentiment_cron_loop())
+    print("[cron] Sentiment background task registered.")
+    yield
+    task.cancel()
+    print("[cron] Sentiment background task cancelled.")
+
+app = FastAPI(title="SIH Text Preprocessor API", lifespan=lifespan)
 
 # Enable CORS so the browser can make requests to this API from Vercel
 app.add_middleware(
