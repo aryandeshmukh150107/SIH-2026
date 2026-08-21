@@ -30,11 +30,11 @@ from text_cleaner import clean_text
 
 app = FastAPI(title="SIH Text Preprocessor API")
 
-# Enable CORS so the browser can make requests to this API from index.html
+# Enable CORS so the browser can make requests to this API from Vercel
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow any origin for deployment
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,  # Must be False when allow_origins is ["*"] for browser CORS compliance
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -38,6 +38,7 @@
                 <th>Comment</th>
                 <th>Date</th>
                 <th>Time</th>
+                <th>Sentiment</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -146,7 +147,7 @@
                     'Content-Type': 'application/json',
                     'apikey': SUPABASE_ANON_KEY,
                     'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-                    'Prefer': 'return=minimal'
+                    'Prefer': 'return=representation'
                 },
                 body: JSON.stringify(row)
             });
@@ -156,7 +157,7 @@
                 throw new Error('Supabase error (' + res.status + '): ' + errorBody);
             }
 
-            return true;
+            return await res.json();
         }
 
         // --- Submit handler ---
@@ -256,19 +257,46 @@
             commentsBody.innerHTML = '';
             comments.forEach((c, i) => {
                 const tr = document.createElement('tr');
+                const sentimentDisplay = c.sentiment_type 
+                    ? `<strong style="color:${c.sentiment_type === 'positive' ? 'green' : c.sentiment_type === 'negative' ? 'red' : 'gray'}">${escapeHtml(c.sentiment_type)}</strong> (${c.sentiment_score || ''})`
+                    : '<em>Processing...</em>';
+
                 tr.innerHTML =
                     '<td>' + (i + 1) + '</td>' +
                     '<td>' + escapeHtml(c.ministry) + '</td>' +
                     '<td>' + escapeHtml(c.preprocessing || c.original_text) + '</td>' +
                     '<td>' + (c.comment_date || '') + '</td>' +
                     '<td>' + (c.comment_time || '') + '</td>' +
-                    '<td><button onclick="deleteComment(' + (c._localId || i) + ')">Delete</button></td>';
+                    '<td>' + sentimentDisplay + '</td>' +
+                    '<td><button onclick="deleteComment(' + (c.comment_id || c._localId || i) + ')">Delete</button></td>';
                 commentsBody.appendChild(tr);
             });
             commentCount.textContent = comments.length;
             exportBtn.disabled = comments.length === 0;
             clearBtn.disabled = comments.length === 0;
         }
+
+        // --- Load existing comments from Supabase on load ---
+        async function loadCommentsFromSupabase() {
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + '?select=*&order=comment_id.desc&limit=50', {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        comments = data;
+                        renderComments();
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not load comments from Supabase:', err);
+            }
+        }
+        loadCommentsFromSupabase();
 
         // --- Delete single comment (local only) ---
         function deleteComment(id) {
