@@ -217,6 +217,15 @@
 
                 const inserted = await insertToSupabase(row);
 
+                // Start sentiment scoring only after the new row exists in Supabase.
+                const sentimentRes = await fetch('/run-sentiment', {
+                    method: 'POST'
+                });
+
+                if (!sentimentRes.ok) {
+                    console.warn('Sentiment processing could not be started.');
+                }
+
                 // Add to local list (use returned data if available)
                 const entry = inserted[0] || row;
                 entry._localId = Date.now();
