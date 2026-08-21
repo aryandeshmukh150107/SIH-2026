@@ -5,6 +5,10 @@ cd /d "%~dp0"
 set SUPABASE_URL=https://nmbiilbiyxgfsfusnzht.supabase.co
 set SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmlpbGJpeXhnZnNmdXNuemh0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzIzMjAyNCwiZXhwIjoyMTAyODA4MDI0fQ.lxn4KDqFkvO6qqomCJ_vXjcyq85OhUeF_pxFXktnHEA
 
+echo [SIH-2026] Installing/verifying required packages...
+pip install -r requirements.txt >nul 2>&1
+
+echo.
 echo [SIH-2026] Starting server...
 echo.
 echo  Frontend : http://localhost:8000
