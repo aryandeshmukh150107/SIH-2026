@@ -187,7 +187,7 @@
                 ministry: ministry,
                 comment_date: dateStr,
                 comment_time: timeStr,
-                comment_text: text
+                original_text: text
             };
 
             // Disable button while sending
@@ -196,10 +196,8 @@
             statusMsg.textContent = '';
 
             try {
-                const inserted = await insertToSupabase(row);
-
-                // Add to local list (use returned data if available)
-                const entry = inserted[0] || row;
+                await insertToSupabase(row);
+                const entry = row;
                 entry._localId = Date.now();
                 comments.push(entry);
                 renderComments();
@@ -227,7 +225,7 @@
                 tr.innerHTML =
                     '<td>' + (i + 1) + '</td>' +
                     '<td>' + escapeHtml(c.ministry) + '</td>' +
-                    '<td>' + escapeHtml(c.comment_text) + '</td>' +
+                    '<td>' + escapeHtml(c.original_text) + '</td>' +
                     '<td>' + (c.comment_date || '') + '</td>' +
                     '<td>' + (c.comment_time || '') + '</td>' +
                     '<td><button onclick="deleteComment(' + (c._localId || i) + ')">Delete</button></td>';
