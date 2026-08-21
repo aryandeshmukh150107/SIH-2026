@@ -1,8 +1,6 @@
 import sys
 import os
-import asyncio
 from pathlib import Path
-from contextlib import asynccontextmanager
 
 # Ensure we can import text_cleaner when running directly or as a module
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -30,33 +28,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from text_cleaner import clean_text
 
-# ---------------------------------------------------------------------------
-# Background cron: run sentiment pipeline every 30 seconds
-# ---------------------------------------------------------------------------
-SENTIMENT_CRON_INTERVAL = 30  # seconds
 
-async def _sentiment_cron_loop():
-    """Background loop that scores unprocessed rows every 30 seconds."""
-    print(f"[cron] Sentiment cron started (interval={SENTIMENT_CRON_INTERVAL}s)")
-    while True:
-        await asyncio.sleep(SENTIMENT_CRON_INTERVAL)
-        if _sentiment_ready:
-            try:
-                # Run the synchronous pipeline in a thread to avoid blocking the event loop
-                await asyncio.get_event_loop().run_in_executor(None, _run_pipeline)
-            except Exception as exc:
-                print(f"[cron] Sentiment cron error: {exc}")
+def _safe_run_pipeline():
+    """Wrapper that catches all exceptions so BackgroundTasks never crashes silently."""
+    try:
+        print("[bg] Sentiment pipeline triggered...")
+        _run_pipeline()
+        print("[bg] Sentiment pipeline finished.")
+    except Exception as exc:
+        print(f"[bg] Sentiment pipeline FAILED: {exc}")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Start the sentiment cron on server boot, cancel on shutdown."""
-    task = asyncio.create_task(_sentiment_cron_loop())
-    print("[cron] Sentiment background task registered.")
-    yield
-    task.cancel()
-    print("[cron] Sentiment background task cancelled.")
 
-app = FastAPI(title="SIH Text Preprocessor API", lifespan=lifespan)
+app = FastAPI(title="SIH Text Preprocessor API")
 
 # Enable CORS so the browser can make requests to this API from Vercel
 app.add_middleware(
@@ -110,9 +93,16 @@ class CleanResponse(BaseModel):
     cleaned_text: str
 
 @app.post("/clean", response_model=CleanResponse)
-def clean_text_endpoint(request: CleanRequest):
-    """Clean the submitted text before it is saved to Supabase."""
+def clean_text_endpoint(request: CleanRequest, background_tasks: BackgroundTasks):
+    """
+    Clean the submitted text before it is saved to Supabase.
+    After returning the cleaned text, automatically triggers the sentiment
+    pipeline in the background to score any unprocessed rows.
+    """
     cleaned = clean_text(request.text)
+    # Auto-trigger sentiment scoring after every text cleaning
+    if _sentiment_ready:
+        background_tasks.add_task(_safe_run_pipeline)
     return CleanResponse(cleaned_text=cleaned)
 
 
@@ -129,7 +119,7 @@ def run_sentiment_endpoint(background_tasks: BackgroundTasks):
             status_code=503,
             content={"error": "Sentiment pipeline not available", "detail": _sentiment_error}
         )
-    background_tasks.add_task(_run_pipeline)
+    background_tasks.add_task(_safe_run_pipeline)
     return {"status": "ok", "message": "Sentiment pipeline started in background"}
 
 
