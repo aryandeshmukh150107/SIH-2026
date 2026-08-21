@@ -173,8 +173,7 @@ a:hover {
 }
 
 .sidebar-column {
-    position: sticky;
-    top: 2rem;
+    /* position: static by default */
 }
 
 /* --------------------------------------------------------------------------
