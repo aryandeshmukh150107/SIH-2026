@@ -181,7 +181,7 @@
 
             try {
                 // 1. Clean the text using the Python API
-                const cleanRes = await fetch('http://localhost:8000/clean', {
+                const cleanRes = await fetch('/clean', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: text })
