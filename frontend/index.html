@@ -262,6 +262,22 @@
         customOptions.className = 'custom-options';
         customSelectWrapper.appendChild(customOptions);
 
+        const customSearch = document.createElement('input');
+        customSearch.type = 'text';
+        customSearch.className = 'custom-search';
+        customSearch.placeholder = 'Search ministry...';
+        customOptions.appendChild(customSearch);
+
+        const customOptionsList = document.createElement('div');
+        customOptionsList.className = 'custom-options-list';
+        customOptions.appendChild(customOptionsList);
+
+        const noResultsMsg = document.createElement('div');
+        noResultsMsg.className = 'custom-option no-results';
+        noResultsMsg.textContent = 'No ministries found';
+        noResultsMsg.style.display = 'none';
+        customOptionsList.appendChild(noResultsMsg);
+
         MINISTRIES.forEach(name => {
             // Populate native
             const opt = document.createElement('option');
@@ -277,14 +293,34 @@
                 ministrySelect.value = name;
                 customSelectTrigger.querySelector('span').textContent = name;
                 customSelectWrapper.classList.remove('open');
-                Array.from(customOptions.children).forEach(child => child.classList.remove('selected'));
+                Array.from(customOptionsList.children).forEach(child => child.classList.remove('selected'));
                 customOpt.classList.add('selected');
             });
-            customOptions.appendChild(customOpt);
+            customOptionsList.appendChild(customOpt);
+        });
+
+        customSearch.addEventListener('input', function(e) {
+            const filter = e.target.value.toLowerCase();
+            let visibleCount = 0;
+            Array.from(customOptionsList.children).forEach(child => {
+                if (child.classList.contains('no-results')) return;
+                if (child.textContent.toLowerCase().includes(filter)) {
+                    child.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    child.style.display = 'none';
+                }
+            });
+            noResultsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
         });
 
         customSelectTrigger.addEventListener('click', function() {
             customSelectWrapper.classList.toggle('open');
+            if (customSelectWrapper.classList.contains('open')) {
+                customSearch.value = '';
+                customSearch.dispatchEvent(new Event('input'));
+                setTimeout(() => customSearch.focus(), 50);
+            }
         });
 
         document.addEventListener('click', function(e) {
