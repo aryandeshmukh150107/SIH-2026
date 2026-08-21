@@ -131,12 +131,19 @@ def update_row(row_id, scores: dict) -> None:
         .eq(PK_COL, row_id)
         .execute()
     )
-    # Log the raw response so we can diagnose silent failures
-    print("[sentiment]   [DEBUG] update response data:", response.data)
-    if not response.data:
-        print("[sentiment]   [WARN] Update returned no data — possible RLS block or wrong PK column name.")
-        print("[sentiment]   [WARN] PK_COL used:", PK_COL, "| row_id:", row_id)
-        print("[sentiment]   [WARN] Columns updated:", list(scores.keys()))
+    # Log safe fields only (avoids UnicodeEncodeError from emoji in original_text)
+    try:
+        if response.data:
+            row_data = response.data[0] if response.data else {}
+            print("[sentiment]   [DEBUG] update OK for id=" + str(row_data.get(PK_COL, "?"))
+                  + " -> " + str(row_data.get(TYPE_COL, "?"))
+                  + " (" + str(row_data.get(SCORE_COL, "?")) + ")")
+        else:
+            print("[sentiment]   [WARN] Update returned no data — possible RLS block or wrong PK column name.")
+            print("[sentiment]   [WARN] PK_COL used:", PK_COL, "| row_id:", row_id)
+            print("[sentiment]   [WARN] Columns updated:", list(scores.keys()))
+    except (UnicodeEncodeError, Exception) as log_err:
+        print("[sentiment]   [DEBUG] update executed (log suppressed due to encoding: " + type(log_err).__name__ + ")")
 
 
 def run_pipeline() -> None:
