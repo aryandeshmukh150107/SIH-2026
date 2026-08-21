@@ -50,8 +50,8 @@
 
     <script>
         // --- API Backend config ---
-        // Override window.API_BASE_URL if hosted separately (e.g., Vercel frontend + Railway backend)
-        const API_BASE_URL = window.API_BASE_URL || '';
+        // Defaults to live Railway backend URL when deployed on Vercel
+        const API_BASE_URL = window.API_BASE_URL || 'https://sih-2026-production.up.railway.app';
 
         // --- Supabase config ---
         const SUPABASE_URL = 'https://nmbiilbiyxgfsfusnzht.supabase.co';
