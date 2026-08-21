@@ -173,29 +173,48 @@
                 return;
             }
 
-            const now = new Date();
-            // Format date as YYYY-MM-DD (Supabase date type)
-            const dateStr = now.getFullYear() + '-' +
-                String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                String(now.getDate()).padStart(2, '0');
-            // Format time as HH:MM:SS (Supabase time type)
-            const timeStr = String(now.getHours()).padStart(2, '0') + ':' +
-                String(now.getMinutes()).padStart(2, '0') + ':' +
-                String(now.getSeconds()).padStart(2, '0');
-
-            const row = {
-                ministry: ministry,
-                comment_date: dateStr,
-                comment_time: timeStr,
-                comment_text: text
-            };
-
             // Disable button while sending
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-            statusMsg.textContent = '';
+            submitBtn.textContent = 'Processing...';
+            statusMsg.textContent = 'Cleaning text with Python API...';
+            statusMsg.style.color = 'blue';
 
             try {
+                // 1. Clean the text using the Python API
+                const cleanRes = await fetch('http://localhost:8000/clean', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                if (!cleanRes.ok) {
+                    throw new Error('Failed to clean text on the server. Make sure the FastAPI server is running!');
+                }
+
+                const cleanData = await cleanRes.json();
+                const cleanedText = cleanData.cleaned_text;
+
+                statusMsg.textContent = 'Saving to database...';
+
+                // 2. Prepare the data with the cleaned text
+                const now = new Date();
+                // Format date as YYYY-MM-DD (Supabase date type)
+                const dateStr = now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0');
+                // Format time as HH:MM:SS (Supabase time type)
+                const timeStr = String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0') + ':' +
+                    String(now.getSeconds()).padStart(2, '0');
+
+                const row = {
+                    ministry: ministry,
+                    comment_date: dateStr,
+                    comment_time: timeStr,
+                    original_text: text,
+                    preprocessing: cleanedText
+                };
+
                 const inserted = await insertToSupabase(row);
 
                 // Add to local list (use returned data if available)
@@ -227,7 +246,7 @@
                 tr.innerHTML =
                     '<td>' + (i + 1) + '</td>' +
                     '<td>' + escapeHtml(c.ministry) + '</td>' +
-                    '<td>' + escapeHtml(c.comment_text) + '</td>' +
+                    '<td>' + escapeHtml(c.preprocessing || c.original_text) + '</td>' +
                     '<td>' + (c.comment_date || '') + '</td>' +
                     '<td>' + (c.comment_time || '') + '</td>' +
                     '<td><button onclick="deleteComment(' + (c._localId || i) + ')">Delete</button></td>';

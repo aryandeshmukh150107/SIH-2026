@@ -1,6 +1,7 @@
 import re
 import html
 import unicodedata
+import emoji
 
 
 def clean_text(text):
@@ -40,13 +41,31 @@ def clean_text(text):
     text = "".join(cleaned_chars)
 
     # --------------------------------------------------
-    # 5. Remove excessive dots
+    # 5. Translate emojis
+    # "😡" -> "[pouting face]"
+    # --------------------------------------------------
+    text = emoji.demojize(text, delimiters=(" [", "] "))
+    text = re.sub(r"\[([a-zA-Z0-9_]+)\]", lambda m: f"[{m.group(1).replace('_', ' ')}]", text)
+
+    # --------------------------------------------------
+    # 6. Remove special characters (e.g., #, @)
+    # --------------------------------------------------
+    text = re.sub(r"[@#^&*+~|<>]", " ", text)
+
+    # --------------------------------------------------
+    # 7. Reduce repeating letters
+    # "sooooo" -> "soo"
+    # --------------------------------------------------
+    text = re.sub(r"([a-zA-Z])\1{2,}", r"\1\1", text)
+
+    # --------------------------------------------------
+    # 8. Remove excessive dots
     # "hate.........." -> "hate"
     # --------------------------------------------------
     text = re.sub(r"\.{2,}", " ", text)
 
     # --------------------------------------------------
-    # 6. Reduce repeated ! and ?
+    # 9. Reduce repeated ! and ?
     # "terrible!!!!!!" -> "terrible!"
     # "why??????" -> "why?"
     # --------------------------------------------------
@@ -54,32 +73,24 @@ def clean_text(text):
     text = re.sub(r"\?{2,}", "?", text)
 
     # --------------------------------------------------
-    # 7. Remove sequences of obvious punctuation junk
-    #
-    # Example:
-    # "because'];]" -> "because"
-    # "[;;]"        -> ""
-    #
-    # Single apostrophes are preserved so:
-    # "don't" stays "don't"
-    # "can't" stays "can't"
+    # 10. Remove sequences of obvious punctuation junk
     # --------------------------------------------------
     junk_pattern = r"""['\[\]{};:`"|\\/]{2,}"""
     text = re.sub(junk_pattern, " ", text)
 
     # --------------------------------------------------
-    # 8. Normalize whitespace
+    # 11. Normalize whitespace
     # --------------------------------------------------
     text = re.sub(r"\s+", " ", text)
 
     # --------------------------------------------------
-    # 9. Remove spaces before punctuation
+    # 12. Remove spaces before punctuation
     # "good !" -> "good!"
     # --------------------------------------------------
     text = re.sub(r"\s+([,.!?%])", r"\1", text)
 
     # --------------------------------------------------
-    # 10. Final cleanup
+    # 13. Final cleanup
     # --------------------------------------------------
     text = text.strip()
 
