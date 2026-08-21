@@ -11,12 +11,17 @@ def clean_text(text):
     text = unicodedata.normalize("NFKC", text)
 
     # --------------------------------------------------
-    # 2. Decode HTML entities
+    # 2. Convert to lowercase
+    # --------------------------------------------------
+    text = text.lower()
+
+    # --------------------------------------------------
+    # 3. Decode HTML entities
     # --------------------------------------------------
     text = html.unescape(text)
 
     # --------------------------------------------------
-    # 3. Remove URLs
+    # 4. Remove URLs
     # --------------------------------------------------
     text = re.sub(
         r"https?://\S+|www\.\S+",
