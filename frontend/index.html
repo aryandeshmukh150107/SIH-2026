@@ -50,9 +50,17 @@
     <button id="clearBtn" disabled>Clear All</button>
 
     <script>
-        // --- API Backend config ---
-        // Defaults to live Railway backend URL when deployed on Vercel
-        const API_BASE_URL = window.API_BASE_URL || 'https://sih-2026-production.up.railway.app';
+        // --- Dynamic API Routing ---
+        const isLocalhost = Boolean(
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '[::1]'
+        );
+
+        const API_BASE_URL = window.API_BASE_URL || (isLocalhost ? 'http://localhost:8000' : 'https://sih-2026-production.up.railway.app');
+
+        console.log(`[Config] Hostname: "${window.location.hostname}" | Environment: ${isLocalhost ? 'LOCAL' : 'PRODUCTION'}`);
+        console.log(`[Config] API_BASE_URL: "${API_BASE_URL}"`);
 
         // --- Supabase config ---
         const SUPABASE_URL = 'https://nmbiilbiyxgfsfusnzht.supabase.co';
@@ -141,23 +149,39 @@
 
         // --- Supabase POST helper ---
         async function insertToSupabase(row) {
-            const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify(row)
-            });
+            const targetUrl = `${SUPABASE_URL}/rest/v1/${TABLE_NAME}`;
+            console.log(`[Supabase Insert] Attempting POST to: ${targetUrl}`, row);
 
-            if (!res.ok) {
-                const errorBody = await res.text();
-                throw new Error('Supabase error (' + res.status + '): ' + errorBody);
+            try {
+                const res = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(row)
+                });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error(`[Supabase Insert Failure] HTTP ${res.status} ${res.statusText}`, {
+                        url: targetUrl,
+                        status: res.status,
+                        statusText: res.statusText,
+                        responseBody: errorText
+                    });
+                    throw new Error(`Supabase insert error (${res.status}): ${errorText}`);
+                }
+
+                const data = await res.json();
+                console.log(`[Supabase Insert Success] HTTP ${res.status}`, data);
+                return data;
+            } catch (err) {
+                console.error(`[Supabase Insert Exception] Network error or CORS failure for ${targetUrl}:`, err);
+                throw err;
             }
-
-            return await res.json();
         }
 
         // --- Submit handler ---
@@ -186,28 +210,43 @@
 
             try {
                 // 1. Clean the text using the Python API
-                const cleanRes = await fetch(API_BASE_URL + '/clean', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
+                const cleanUrl = `${API_BASE_URL}/clean`;
+                const cleanPayload = { text: text };
+                console.log(`[API Clean] Attempting POST to: ${cleanUrl}`, cleanPayload);
 
-                if (!cleanRes.ok) {
-                    throw new Error('Failed to clean text on the server. Make sure the FastAPI server is running!');
+                let cleanedText = text;
+                try {
+                    const cleanRes = await fetch(cleanUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cleanPayload)
+                    });
+
+                    if (!cleanRes.ok) {
+                        const cleanErrBody = await cleanRes.text();
+                        console.error(`[API Clean Error] HTTP ${cleanRes.status} ${cleanRes.statusText}`, {
+                            url: cleanUrl,
+                            status: cleanRes.status,
+                            responseBody: cleanErrBody
+                        });
+                        throw new Error(`Server cleaning failed (${cleanRes.status}): ${cleanErrBody}`);
+                    }
+
+                    const cleanData = await cleanRes.json();
+                    console.log(`[API Clean Success] HTTP ${cleanRes.status}`, cleanData);
+                    cleanedText = cleanData.cleaned_text || text;
+                } catch (cleanErr) {
+                    console.error(`[API Clean Exception] Network error or server offline at ${cleanUrl}:`, cleanErr);
+                    throw cleanErr;
                 }
-
-                const cleanData = await cleanRes.json();
-                const cleanedText = cleanData.cleaned_text;
 
                 statusMsg.textContent = 'Saving to database...';
 
                 // 2. Prepare the data with the cleaned text
                 const now = new Date();
-                // Format date as YYYY-MM-DD (Supabase date type)
                 const dateStr = now.getFullYear() + '-' +
                     String(now.getMonth() + 1).padStart(2, '0') + '-' +
                     String(now.getDate()).padStart(2, '0');
-                // Format time as HH:MM:SS (Supabase time type)
                 const timeStr = String(now.getHours()).padStart(2, '0') + ':' +
                     String(now.getMinutes()).padStart(2, '0') + ':' +
                     String(now.getSeconds()).padStart(2, '0');
@@ -222,19 +261,26 @@
 
                 const inserted = await insertToSupabase(row);
 
-                // Start sentiment scoring only after the new row exists in Supabase.
-                const sentimentRes = await fetch(API_BASE_URL + '/run-sentiment', {
-                    method: 'POST'
-                });
-
-                if (!sentimentRes.ok) {
-                    console.warn('Sentiment processing could not be started.');
+                // 3. Start sentiment scoring in background
+                const sentimentUrl = `${API_BASE_URL}/run-sentiment`;
+                console.log(`[API Sentiment] Triggering POST to: ${sentimentUrl}`);
+                try {
+                    const sentimentRes = await fetch(sentimentUrl, { method: 'POST' });
+                    if (!sentimentRes.ok) {
+                        const sentErrText = await sentimentRes.text();
+                        console.error(`[API Sentiment Error] HTTP ${sentimentRes.status}`, sentErrText);
+                    } else {
+                        const sentData = await sentimentRes.json();
+                        console.log(`[API Sentiment Success] HTTP ${sentimentRes.status}`, sentData);
+                    }
+                } catch (sentErr) {
+                    console.error(`[API Sentiment Exception] Failed to trigger ${sentimentUrl}:`, sentErr);
                 }
 
                 // Add to local list (use returned data if available)
-                const entry = inserted[0] || row;
+                const entry = (Array.isArray(inserted) && inserted[0]) ? inserted[0] : row;
                 entry._localId = Date.now();
-                comments.push(entry);
+                comments.unshift(entry);
                 renderComments();
 
                 // Reset form
@@ -245,7 +291,7 @@
             } catch (err) {
                 statusMsg.textContent = '❌ Failed to save: ' + err.message;
                 statusMsg.style.color = 'red';
-                console.error(err);
+                console.error('[Submit Handler Fatal Exception]', err);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Submit Comment';
