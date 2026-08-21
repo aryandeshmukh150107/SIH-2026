@@ -37,3 +37,7 @@ Open `frontend/index.html` in a browser, or serve the repository with a local st
 
 - `Import "emoji" could not be resolved`: select the virtual environment in VS Code with **Python: Select Interpreter**, then install `requirements.txt` into that environment.
 - `Failed to fetch`: the API is not running, the API dependencies are missing, or the frontend is being opened on a different computer from the API. In the last case, replace `localhost` in `frontend/index.html` with the API computer's reachable IP address and allow port `8000` through its firewall.
+
+
+Ministry of Corporate Affairs :	Sentiment analysis of comments received through E-consultation module	Software	: SIH25035 : theme:	Miscellaneous
+
