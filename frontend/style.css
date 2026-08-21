@@ -1,0 +1,678 @@
+/* ==========================================================================
+   SIH-2026 — Sentiment Analysis of E-Consultation Comments
+   Civic Technology Interface Stylesheet
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. RESET / BASE
+   -------------------------------------------------------------------------- */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #F6F5F1;
+    color: #17201B;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   2. TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+
+h1, h2, h3, h4 {
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+}
+
+label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #17201B;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+strong {
+    font-weight: 600;
+}
+
+a {
+    color: #1A5632;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   3. HEADER
+   -------------------------------------------------------------------------- */
+
+.site-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #D9DDD8;
+    padding: 0 2rem;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+}
+
+.header-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+
+.header-brand-tag {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    background-color: #1A5632;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+}
+
+.header-brand-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #17201B;
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: #66706A;
+}
+
+.header-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #1A5632;
+    display: inline-block;
+}
+
+.header-subtitle-bar {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #D9DDD8;
+    padding: 1rem 2rem;
+}
+
+.header-subtitle-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-subtitle-inner h1 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #17201B;
+    margin-bottom: 0.25rem;
+}
+
+.header-description {
+    font-size: 0.875rem;
+    color: #66706A;
+    font-weight: 400;
+    max-width: 40rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. MAIN LAYOUT
+   -------------------------------------------------------------------------- */
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    align-items: start;
+}
+
+.primary-column {
+    min-width: 0;
+}
+
+.sidebar-column {
+    position: sticky;
+    top: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. FORM / SUBMISSION PANEL
+   -------------------------------------------------------------------------- */
+
+.form-panel {
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 4px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.form-panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #17201B;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #D9DDD8;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: #17201B;
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 3px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2366706A' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.form-select:hover {
+    border-color: #1A5632;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #1A5632;
+    box-shadow: 0 0 0 2px rgba(26, 86, 50, 0.12);
+}
+
+.form-textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: 0.75rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    color: #17201B;
+    line-height: 1.6;
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 3px;
+    resize: vertical;
+    transition: border-color 0.15s ease;
+}
+
+.form-textarea::placeholder {
+    color: #99A09B;
+}
+
+.form-textarea:hover {
+    border-color: #1A5632;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #1A5632;
+    box-shadow: 0 0 0 2px rgba(26, 86, 50, 0.12);
+}
+
+/* Submit button */
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    background-color: #1A5632;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+    margin-top: 1rem;
+}
+
+.btn-submit:hover {
+    background-color: #14452A;
+}
+
+.btn-submit:active {
+    background-color: #0F3520;
+}
+
+.btn-submit:focus-visible {
+    outline: 2px solid #1A5632;
+    outline-offset: 2px;
+}
+
+.btn-submit:disabled {
+    background-color: #A3B0A8;
+    cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   6. STATUS MESSAGES
+   -------------------------------------------------------------------------- */
+
+.status-message {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    min-height: 1.25rem;
+    margin-top: 1rem;
+    padding: 0;
+    transition: color 0.2s ease;
+}
+
+.status-message:empty {
+    display: none;
+}
+
+.status-message.status-info {
+    color: #2563A8;
+}
+
+.status-message.status-success {
+    color: #1A5632;
+}
+
+.status-message.status-error {
+    color: #A83232;
+}
+
+.status-message.status-warn {
+    color: #9A6700;
+}
+
+/* --------------------------------------------------------------------------
+   7. PROCESSING / INFO PANEL (SIDEBAR)
+   -------------------------------------------------------------------------- */
+
+.info-panel {
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 4px;
+    padding: 1.5rem;
+}
+
+.info-panel-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #66706A;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1.5rem;
+}
+
+.process-steps {
+    list-style: none;
+}
+
+.process-step {
+    display: flex;
+    gap: 1rem;
+    padding: 0.875rem 0;
+    border-top: 1px solid #EDEEE9;
+}
+
+.process-step:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.process-step:last-child {
+    padding-bottom: 0;
+}
+
+.process-step-number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #B8860B;
+    font-variant-numeric: tabular-nums;
+    min-width: 1.25rem;
+    flex-shrink: 0;
+    padding-top: 0.0625rem;
+}
+
+.process-step-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.process-step-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #17201B;
+    margin-bottom: 0.125rem;
+}
+
+.process-step-desc {
+    font-size: 0.8125rem;
+    color: #66706A;
+    line-height: 1.5;
+}
+
+.info-panel-note {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #EDEEE9;
+    font-size: 0.75rem;
+    color: #66706A;
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   8. COMMENTS SECTION
+   -------------------------------------------------------------------------- */
+
+.comments-section {
+    grid-column: 1 / -1;
+}
+
+.comments-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #17201B;
+}
+
+.comments-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #17201B;
+}
+
+.comments-count {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #66706A;
+}
+
+/* Comments table */
+.comments-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.comments-table thead {
+    background-color: #F6F5F1;
+}
+
+.comments-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #66706A;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #D9DDD8;
+    white-space: nowrap;
+}
+
+.comments-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #EDEEE9;
+    vertical-align: top;
+    color: #17201B;
+    line-height: 1.5;
+}
+
+.comments-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.comments-table tbody tr:hover {
+    background-color: #FAFAF8;
+}
+
+/* Sentiment display in table */
+.comments-table td em {
+    color: #66706A;
+    font-style: italic;
+}
+
+.sentiment-positive {
+    color: #1A5632;
+}
+
+.sentiment-negative {
+    color: #A83232;
+}
+
+.sentiment-neutral {
+    color: #66706A;
+}
+
+/* Delete button in table */
+.comments-table .btn-delete {
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #A83232;
+    background: none;
+    border: 1px solid #D9DDD8;
+    border-radius: 3px;
+    padding: 0.25rem 0.625rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.comments-table .btn-delete:hover {
+    border-color: #A83232;
+    background-color: #FDF2F2;
+}
+
+.comments-table .btn-delete:focus-visible {
+    outline: 2px solid #A83232;
+    outline-offset: 1px;
+}
+
+/* Empty state */
+.comments-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #66706A;
+    font-size: 0.875rem;
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   9. UTILITY BUTTONS (Export / Clear)
+   -------------------------------------------------------------------------- */
+
+.actions-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.btn-secondary {
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #17201B;
+    background-color: #FFFFFF;
+    border: 1px solid #D9DDD8;
+    border-radius: 3px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+    border-color: #17201B;
+    background-color: #F6F5F1;
+}
+
+.btn-secondary:focus-visible {
+    outline: 2px solid #1A5632;
+    outline-offset: 2px;
+}
+
+.btn-secondary:disabled {
+    color: #99A09B;
+    border-color: #EDEEE9;
+    background-color: #FAFAF8;
+    cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+   10. FOOTER
+   -------------------------------------------------------------------------- */
+
+.site-footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    border-top: 1px solid #D9DDD8;
+    font-size: 0.75rem;
+    color: #66706A;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   11. RESPONSIVE DESIGN
+   -------------------------------------------------------------------------- */
+
+/* Tablet */
+@media (max-width: 960px) {
+    .main-container {
+        grid-template-columns: 1fr;
+        padding: 1.5rem;
+    }
+
+    .sidebar-column {
+        position: static;
+        order: -1;
+    }
+
+    .comments-section {
+        grid-column: 1;
+    }
+
+    .header-inner {
+        padding: 0;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .site-header {
+        padding: 0 1rem;
+    }
+
+    .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        padding: 0.75rem 0;
+        gap: 0.375rem;
+    }
+
+    .header-subtitle-bar {
+        padding: 0.75rem 1rem;
+    }
+
+    .header-subtitle-inner h1 {
+        font-size: 1.125rem;
+    }
+
+    .main-container {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .form-panel {
+        padding: 1.25rem;
+    }
+
+    .info-panel {
+        padding: 1.25rem;
+    }
+
+    /* Horizontal scroll for table on small screens */
+    .comments-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .comments-table {
+        min-width: 640px;
+    }
+
+    .actions-bar {
+        flex-direction: column;
+    }
+
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+
+    .site-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 1.5rem 1rem;
+    }
+}

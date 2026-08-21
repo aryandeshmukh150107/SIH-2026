@@ -1,53 +1,142 @@
-<!DOCTYPE html> <!--rollback to disconnected sentiment model -->
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ministry Comment Portal</title>
+    <meta name="description" content="SIH-2026 — Sentiment Analysis of Comments Received Through E-Consultation Module. Submit and analyze citizen feedback on government policies.">
+    <title>SIH-2026 — E-Consultation Feedback Portal</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Ministry Comment Portal</h1>
 
-    <form id="commentForm">
-        <div>
-            <label for="ministrySelect"><strong>Select Ministry:</strong></label><br>
-            <select id="ministrySelect" required>
-                <option value="" disabled selected>-- Select a Ministry --</option>
-            </select>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <span class="header-brand-tag">SIH-2026</span>
+                <span class="header-brand-title">E-Consultation Feedback Portal</span>
+            </div>
+            <div class="header-meta">
+                <span class="header-status">
+                    <span class="header-status-dot"></span>
+                    System active
+                </span>
+            </div>
         </div>
-        <br>
-        <div>
-            <label for="commentBox"><strong>Your Comment:</strong></label><br>
-            <textarea id="commentBox" rows="5" cols="60" placeholder="Type your comment here..." required></textarea>
+    </header>
+
+    <div class="header-subtitle-bar">
+        <div class="header-subtitle-inner">
+            <h1>Sentiment Analysis of Citizen Feedback</h1>
+            <p class="header-description">Submit your feedback on government policies. Comments are preprocessed and analyzed to generate actionable policy insights.</p>
         </div>
-        <br>
-        <button type="submit" id="submitBtn">Submit Comment</button>
-    </form>
+    </div>
 
-    <p id="statusMsg"></p>
+    <!-- Main Content -->
+    <main class="main-container">
 
-    <hr>
-    <h2>Submitted Comments (<span id="commentCount">0</span>)</h2>
-    <table id="commentsTable" border="1" cellpadding="6" cellspacing="0">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Ministry</th>
-                <th>Comment</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Sentiment</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="commentsBody"></tbody>
-    </table>
+        <!-- Left Column: Feedback Form -->
+        <div class="primary-column">
+            <div class="form-panel">
+                <h2 class="form-panel-title">Submit your feedback</h2>
 
-    <br>
-    <button id="exportBtn" disabled>Export as JSON</button>
-    <button id="clearBtn" disabled>Clear All</button>
+                <form id="commentForm">
+                    <div class="form-group">
+                        <label for="ministrySelect">Ministry</label>
+                        <select id="ministrySelect" class="form-select" required>
+                            <option value="" disabled selected>-- Select a Ministry --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="commentBox">Your feedback</label>
+                        <textarea id="commentBox" class="form-textarea" rows="7" placeholder="Share your views, concerns, suggestions, or experiences regarding this policy..." required></textarea>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="btn-submit">Submit feedback</button>
+                </form>
+
+                <p id="statusMsg" class="status-message"></p>
+            </div>
+        </div>
+
+        <!-- Right Column: Info Panel -->
+        <aside class="sidebar-column">
+            <div class="info-panel">
+                <h3 class="info-panel-title">How your feedback is processed</h3>
+                <ol class="process-steps">
+                    <li class="process-step">
+                        <span class="process-step-number">01</span>
+                        <div class="process-step-content">
+                            <div class="process-step-title">Your feedback</div>
+                            <p class="process-step-desc">Your comment is received through the e-consultation portal.</p>
+                        </div>
+                    </li>
+                    <li class="process-step">
+                        <span class="process-step-number">02</span>
+                        <div class="process-step-content">
+                            <div class="process-step-title">Text preprocessing</div>
+                            <p class="process-step-desc">Comments are cleaned, normalized, and prepared for analysis.</p>
+                        </div>
+                    </li>
+                    <li class="process-step">
+                        <span class="process-step-number">03</span>
+                        <div class="process-step-content">
+                            <div class="process-step-title">Sentiment analysis</div>
+                            <p class="process-step-desc">Each comment is scored for positive, negative, or neutral sentiment.</p>
+                        </div>
+                    </li>
+                    <li class="process-step">
+                        <span class="process-step-number">04</span>
+                        <div class="process-step-content">
+                            <div class="process-step-title">Policy insights</div>
+                            <p class="process-step-desc">Aggregated sentiment data informs evidence-based policy decisions.</p>
+                        </div>
+                    </li>
+                </ol>
+                <p class="info-panel-note">All submissions are stored securely. Your feedback contributes to improving public policy through data-driven analysis.</p>
+            </div>
+        </aside>
+
+        <!-- Comments Section -->
+        <section class="comments-section">
+            <div class="comments-header">
+                <h2 class="comments-title">Submitted comments</h2>
+                <span class="comments-count"><span id="commentCount">0</span> entries</span>
+            </div>
+
+            <div class="comments-table-wrapper">
+                <table id="commentsTable" class="comments-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ministry</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Sentiment</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="commentsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="actions-bar">
+                <button id="exportBtn" class="btn-secondary" disabled>Export as JSON</button>
+                <button id="clearBtn" class="btn-secondary" disabled>Clear all</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <span>SIH-2026 &middot; E-Consultation Sentiment Analysis Module</span>
+        <span>Smart India Hackathon</span>
+    </footer>
 
     <script>
         // --- Dynamic API Routing ---
@@ -139,6 +228,15 @@
         const exportBtn = document.getElementById('exportBtn');
         const clearBtn = document.getElementById('clearBtn');
 
+        // --- Helper: set status message with CSS class ---
+        function setStatus(message, type) {
+            statusMsg.textContent = message;
+            statusMsg.className = 'status-message';
+            if (type) {
+                statusMsg.classList.add('status-' + type);
+            }
+        }
+
         // --- Populate dropdown ---
         MINISTRIES.forEach(name => {
             const opt = document.createElement('option');
@@ -192,21 +290,18 @@
             const text = commentBox.value.trim();
 
             if (!ministry) {
-                statusMsg.textContent = '⚠ Please select a ministry.';
-                statusMsg.style.color = 'red';
+                setStatus('Please select a ministry.', 'error');
                 return;
             }
             if (!text) {
-                statusMsg.textContent = '⚠ Please enter a comment.';
-                statusMsg.style.color = 'red';
+                setStatus('Please enter a comment.', 'error');
                 return;
             }
 
             // Disable button while sending
             submitBtn.disabled = true;
             submitBtn.textContent = 'Processing...';
-            statusMsg.textContent = 'Cleaning text with Python API...';
-            statusMsg.style.color = 'blue';
+            setStatus('Cleaning text with preprocessing pipeline...', 'info');
 
             try {
                 // 1. Clean the text using the Python API
@@ -240,7 +335,7 @@
                     throw cleanErr;
                 }
 
-                statusMsg.textContent = 'Saving to database...';
+                setStatus('Saving to database...', 'info');
 
                 // 2. Prepare the data with the cleaned text
                 const now = new Date();
@@ -286,15 +381,13 @@
                 // Reset form
                 commentBox.value = '';
                 ministrySelect.selectedIndex = 0;
-                statusMsg.textContent = '✅ Comment submitted and saved to database!';
-                statusMsg.style.color = 'green';
+                setStatus('Feedback submitted successfully.', 'success');
             } catch (err) {
-                statusMsg.textContent = '❌ Failed to save: ' + err.message;
-                statusMsg.style.color = 'red';
+                setStatus('Failed to save: ' + err.message, 'error');
                 console.error('[Submit Handler Fatal Exception]', err);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Comment';
+                submitBtn.textContent = 'Submit feedback';
             }
         });
 
@@ -303,8 +396,8 @@
             commentsBody.innerHTML = '';
             comments.forEach((c, i) => {
                 const tr = document.createElement('tr');
-                const sentimentDisplay = c.sentiment_type 
-                    ? `<strong style="color:${c.sentiment_type === 'positive' ? 'green' : c.sentiment_type === 'negative' ? 'red' : 'gray'}">${escapeHtml(c.sentiment_type)}</strong> (${c.sentiment_score || ''})`
+                const sentimentDisplay = c.sentiment_type
+                    ? `<strong class="${c.sentiment_type === 'positive' ? 'sentiment-positive' : c.sentiment_type === 'negative' ? 'sentiment-negative' : 'sentiment-neutral'}">${escapeHtml(c.sentiment_type)}</strong> (${c.sentiment_score || ''})`
                     : '<em>Processing...</em>';
 
                 tr.innerHTML =
@@ -314,7 +407,7 @@
                     '<td>' + (c.comment_date || '') + '</td>' +
                     '<td>' + (c.comment_time || '') + '</td>' +
                     '<td>' + sentimentDisplay + '</td>' +
-                    '<td><button onclick="deleteComment(' + (c.comment_id || c._localId || i) + ')">Delete</button></td>';
+                    '<td><button class="btn-delete" onclick="deleteComment(' + (c.comment_id || c._localId || i) + ')">Delete</button></td>';
                 commentsBody.appendChild(tr);
             });
             commentCount.textContent = comments.length;
@@ -348,8 +441,7 @@
         function deleteComment(id) {
             comments = comments.filter(c => (c._localId || 0) !== id);
             renderComments();
-            statusMsg.textContent = 'Comment removed from local view.';
-            statusMsg.style.color = 'orange';
+            setStatus('Comment removed from local view.', 'warn');
         }
 
         // --- Clear all (local only) ---
@@ -357,8 +449,7 @@
             if (confirm('Clear all comments from local view?')) {
                 comments = [];
                 renderComments();
-                statusMsg.textContent = 'Local view cleared. Database records remain.';
-                statusMsg.style.color = 'orange';
+                setStatus('Local view cleared. Database records remain.', 'warn');
             }
         });
 
@@ -371,8 +462,7 @@
             a.download = 'comments_' + Date.now() + '.json';
             a.click();
             URL.revokeObjectURL(url);
-            statusMsg.textContent = 'Exported ' + comments.length + ' comment(s) as JSON.';
-            statusMsg.style.color = 'green';
+            setStatus('Exported ' + comments.length + ' comment(s) as JSON.', 'success');
         });
 
         // --- Utility ---
