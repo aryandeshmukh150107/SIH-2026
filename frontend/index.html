@@ -245,12 +245,52 @@
             }
         }
 
-        // --- Populate dropdown ---
+        // --- Populate dropdown & Custom UI ---
+        ministrySelect.classList.add('hidden-select');
+        
+        const customSelectWrapper = document.createElement('div');
+        customSelectWrapper.className = 'custom-select-wrapper';
+        ministrySelect.parentNode.insertBefore(customSelectWrapper, ministrySelect.nextSibling);
+
+        const customSelectTrigger = document.createElement('div');
+        customSelectTrigger.className = 'custom-select-trigger';
+        customSelectTrigger.innerHTML = `<span>-- Select a Ministry --</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#17201B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+        customSelectWrapper.appendChild(customSelectTrigger);
+
+        const customOptions = document.createElement('div');
+        customOptions.className = 'custom-options';
+        customSelectWrapper.appendChild(customOptions);
+
         MINISTRIES.forEach(name => {
+            // Populate native
             const opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
             ministrySelect.appendChild(opt);
+
+            // Populate custom
+            const customOpt = document.createElement('div');
+            customOpt.className = 'custom-option';
+            customOpt.textContent = name;
+            customOpt.addEventListener('click', function() {
+                ministrySelect.value = name;
+                customSelectTrigger.querySelector('span').textContent = name;
+                customSelectWrapper.classList.remove('open');
+                Array.from(customOptions.children).forEach(child => child.classList.remove('selected'));
+                customOpt.classList.add('selected');
+            });
+            customOptions.appendChild(customOpt);
+        });
+
+        customSelectTrigger.addEventListener('click', function() {
+            customSelectWrapper.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!customSelectWrapper.contains(e.target)) {
+                customSelectWrapper.classList.remove('open');
+            }
         });
 
         // --- Supabase POST helper ---
@@ -389,6 +429,8 @@
                 // Reset form
                 commentBox.value = '';
                 ministrySelect.selectedIndex = 0;
+                document.querySelector('.custom-select-trigger span').textContent = '-- Select a Ministry --';
+                Array.from(document.querySelectorAll('.custom-option')).forEach(child => child.classList.remove('selected'));
                 setStatus('Feedback submitted successfully.', 'success');
             } catch (err) {
                 setStatus('Failed to save: ' + err.message, 'error');
