@@ -1,4 +1,4 @@
-import sys #vasundhara
+import sys
 import os
 from pathlib import Path
 
@@ -33,11 +33,18 @@ app = FastAPI(title="SIH Text Preprocessor API")
 # Enable CORS so the browser can make requests to this API from index.html
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow any origin for local development
+    allow_origins=["*"],  # Allow any origin for deployment
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Railway deployment probes."""
+    return {"status": "ok", "sentiment_ready": _sentiment_ready}
+
 
 class CleanRequest(BaseModel):
     text: str
