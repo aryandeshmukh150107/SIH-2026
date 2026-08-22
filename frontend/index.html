@@ -705,7 +705,7 @@
         // --- Load existing comments from Supabase on load ---
         async function loadCommentsFromSupabase() {
             try {
-                const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + '?select=*&order=comment_id.desc&limit=50', {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + '?select=*&order=comment_id.desc', {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
