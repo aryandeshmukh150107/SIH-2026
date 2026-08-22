@@ -100,11 +100,11 @@ def clean_text_endpoint(request: CleanRequest):
 
 
 @app.post("/run-sentiment", include_in_schema=True)
-def run_sentiment_endpoint(background_tasks: BackgroundTasks):
+def run_sentiment_endpoint():
     """
-    Triggers the sentiment pipeline in the background.
+    Runs the sentiment pipeline after the comment has been inserted.
     Fetches all unscored rows from Supabase and writes sentiment_score
-    and sentiment_type back. Returns immediately; processing happens async.
+    and sentiment_type back before returning.
     Requires SUPABASE_URL and SUPABASE_SERVICE_KEY env vars to be set.
     """
     if not _sentiment_ready:
@@ -112,8 +112,14 @@ def run_sentiment_endpoint(background_tasks: BackgroundTasks):
             status_code=503,
             content={"error": "Sentiment pipeline not available", "detail": _sentiment_error}
         )
-    background_tasks.add_task(_safe_run_pipeline)
-    return {"status": "ok", "message": "Sentiment pipeline started in background"}
+    try:
+        _run_pipeline()
+        return {"status": "ok", "message": "Sentiment pipeline completed"}
+    except Exception as exc:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Sentiment pipeline failed", "detail": str(exc)}
+        )
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
