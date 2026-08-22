@@ -128,7 +128,7 @@
                 <div class="panel-heading">
                     <div>
                         <h3>Sentiment over time</h3>
-                        <p>Daily sentiment signals for the selected view.</p>
+                        <p>Daily sentiment mix for the selected view.</p>
                     </div>
                     <div class="chart-legend" aria-label="Chart legend">
                         <span><i class="legend-positive"></i>Positive</span>
@@ -156,6 +156,16 @@
         <div class="primary-column">
             <div class="form-panel">
                 <h2 class="form-panel-title">Submit your feedback</h2>
+
+                <section class="policy-brief" aria-live="polite">
+                    <div class="policy-brief-heading">
+                        <span class="eyebrow">Latest available policy</span>
+                        <span class="policy-placeholder">Placeholder data</span>
+                    </div>
+                    <h3 id="selectedPolicyTitle">Select a ministry to view its policy</h3>
+                    <p id="selectedPolicyText">The relevant ministry policy will appear here before you submit feedback.</p>
+                    <span id="selectedPolicyMeta" class="policy-brief-meta"></span>
+                </section>
 
                 <form id="commentForm">
                     <div class="form-group">
@@ -278,6 +288,7 @@
         const SUPABASE_URL = 'https://nmbiilbiyxgfsfusnzht.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmlpbGJpeXhnZnNmdXNuemh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMzIwMjQsImV4cCI6MjEwMjgwODAyNH0.MNGMaHkDVvnn_u6XV_JVX6Uo-Ec3S4GFFP6gRmA-g84';
         const TABLE_NAME = 'comments';
+        const POLICY_TABLE_NAME = 'policies';
 
         const MINISTRIES = [
             "Ministry of Agriculture and Farmers' Welfare",
@@ -339,6 +350,7 @@
 
         // --- State ---
         let comments = [];
+        let policies = [];
 
         // --- DOM refs ---
         const form = document.getElementById('commentForm');
@@ -356,6 +368,9 @@
         const dashboardMinistry = document.getElementById('dashboardMinistry');
         const dashboardSentiment = document.getElementById('dashboardSentiment');
         const refreshDashboard = document.getElementById('refreshDashboard');
+        const selectedPolicyTitle = document.getElementById('selectedPolicyTitle');
+        const selectedPolicyText = document.getElementById('selectedPolicyText');
+        const selectedPolicyMeta = document.getElementById('selectedPolicyMeta');
 
         // --- Helper: set status message with CSS class ---
         function setStatus(message, type) {
@@ -413,6 +428,7 @@
             customOpt.addEventListener('click', function() {
                 ministrySelect.value = name;
                 customSelectTrigger.querySelector('span').textContent = name;
+                renderSelectedPolicy(name);
                 customSelectWrapper.classList.remove('open');
                 Array.from(customOptionsList.children).forEach(child => child.classList.remove('selected'));
                 customOpt.classList.add('selected');
@@ -586,6 +602,7 @@
                 ministrySelect.selectedIndex = 0;
                 document.querySelector('.custom-select-trigger span').textContent = '-- Select a Ministry --';
                 Array.from(document.querySelectorAll('.custom-option')).forEach(child => child.classList.remove('selected'));
+                renderSelectedPolicy('');
                 setStatus('Feedback submitted successfully.', 'success');
             } catch (err) {
                 setStatus('Failed to save: ' + err.message, 'error');
@@ -702,7 +719,8 @@
             const padding = { top: 18, right: 24, bottom: 48, left: 42 };
             const plotWidth = chartWidth - padding.left - padding.right;
             const plotHeight = chartHeight - padding.top - padding.bottom;
-            const xPosition = index => padding.left + (entries.length === 1 ? plotWidth / 2 : index * plotWidth / (entries.length - 1));
+            const groupWidth = plotWidth / entries.length;
+            const xPosition = index => padding.left + groupWidth * (index + 0.5);
             const yPosition = percentage => padding.top + plotHeight - (percentage / 100) * plotHeight;
             const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
                 const y = padding.top + plotHeight * ratio;
@@ -721,15 +739,16 @@
                 const neutral = entry[1].neutral / total * 100;
                 return { date: entry[0], positive: positive, neutral: neutral, negative: 100 - positive - neutral };
             });
-            const positivePoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(entry.positive)).join(' ');
-            const neutralPoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(entry.neutral)).join(' ');
-            const negativePoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(entry.negative)).join(' ');
-            const markers = ['positive', 'neutral', 'negative'].map(sentiment => normalized.map((entry, index) => {
+            const sentiments = ['positive', 'neutral', 'negative'];
+            const barWidth = Math.min(22, Math.max(8, groupWidth / 5));
+            const bars = normalized.map((entry, index) => sentiments.map((sentiment, sentimentIndex) => {
                 const value = entry[sentiment];
-                return '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(value) + '" r="4"><title>' + escapeHtml(entry.date) + ': ' + Math.round(entry[sentiment]) + '% ' + sentiment + '</title></circle>';
+                const height = value / 100 * plotHeight;
+                const x = xPosition(index) - barWidth * 1.8 + sentimentIndex * barWidth * 1.2;
+                const y = padding.top + plotHeight - height;
+                return '<rect class="chart-bar chart-bar-' + sentiment + '" x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + height + '" rx="2"><title>' + escapeHtml(entry.date) + ': ' + Math.round(value) + '% ' + sentiment + '</title></rect>';
             }).join('')).join('');
-            const lines = '<polyline class="chart-line chart-line-positive" points="' + positivePoints + '"></polyline><polyline class="chart-line chart-line-neutral" points="' + neutralPoints + '"></polyline><polyline class="chart-line chart-line-negative" points="' + negativePoints + '"></polyline>';
-            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Independent positive, neutral, and negative sentiment percentages over time">' + gridLines + dateLabels + lines + markers + '</svg>';
+            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Positive, neutral, and negative sentiment percentages by date">' + gridLines + bars + dateLabels + '</svg>';
         }
 
         function renderDistribution(counts, analyzedCount, percentage) {
@@ -794,7 +813,52 @@
                 console.warn('Could not load comments from Supabase:', err);
             }
         }
+
+        function readPolicyField(policy, fieldNames) {
+            const policyKeys = Object.keys(policy);
+            const matchingKey = policyKeys.find(key => fieldNames.includes(key.toLowerCase()));
+            return matchingKey ? policy[matchingKey] : '';
+        }
+
+        function renderSelectedPolicy(ministry) {
+            const policy = policies.find(item => readPolicyField(item, ['ministry', 'ministry_name', 'department']) === ministry);
+            if (!ministry) {
+                selectedPolicyTitle.textContent = 'Select a ministry to view its policy';
+                selectedPolicyText.textContent = 'The relevant ministry policy will appear here before you submit feedback.';
+                selectedPolicyMeta.textContent = '';
+                return;
+            }
+            if (!policy) {
+                selectedPolicyTitle.textContent = 'No policy brief available';
+                selectedPolicyText.textContent = 'A placeholder policy has not been added for this ministry yet.';
+                selectedPolicyMeta.textContent = ministry;
+                return;
+            }
+            selectedPolicyTitle.textContent = readPolicyField(policy, ['policy_title', 'title', 'name']) || 'Ministry policy brief';
+            selectedPolicyText.textContent = readPolicyField(policy, ['policy_text', 'description', 'summary', 'policy', 'details']) || 'Policy details are not available in this record yet.';
+            const updated = readPolicyField(policy, ['updated_at', 'last_updated', 'date']);
+            selectedPolicyMeta.textContent = updated ? 'For ' + ministry + ' | Available policy date: ' + updated : ministry + ' | Placeholder policy record';
+        }
+
+        async function loadPoliciesFromSupabase() {
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/' + POLICY_TABLE_NAME + '?select=*', {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                    }
+                });
+                if (!res.ok) throw new Error('Could not load policy records (' + res.status + ').');
+                const data = await res.json();
+                policies = Array.isArray(data) ? data : [];
+                renderSelectedPolicy(ministrySelect.value);
+            } catch (err) {
+                console.warn('Could not load policies from Supabase:', err);
+            }
+        }
+
         loadCommentsFromSupabase();
+        loadPoliciesFromSupabase();
 
         // --- Delete single comment (local only) ---
         function deleteComment(id) {

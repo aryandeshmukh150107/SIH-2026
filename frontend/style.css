@@ -480,20 +480,16 @@ a:hover {
     font-size: 10px;
 }
 
-.chart-line {
-    fill: none;
-    stroke-width: 2.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.chart-bar {
+    stroke: #FFFFFF;
+    stroke-width: 1;
+    transition: opacity 0.15s ease;
 }
 
-.chart-line-positive { stroke: #1A5632; }
-.chart-line-neutral { stroke: #89938C; }
-.chart-line-negative { stroke: #A83232; }
-.chart-dot { stroke: #FFFFFF; stroke-width: 2.5; }
-.chart-dot-positive { fill: #1A5632; }
-.chart-dot-neutral { fill: #89938C; }
-.chart-dot-negative { fill: #A83232; }
+.chart-bar:hover { opacity: 0.75; }
+.chart-bar-positive { fill: #1A5632; }
+.chart-bar-neutral { fill: #89938C; }
+.chart-bar-negative { fill: #A83232; }
 
 .panel-heading {
     display: flex;
@@ -690,6 +686,53 @@ a:hover {
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid #D9DDD8;
+}
+
+.policy-brief {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.1rem;
+    background: #F1F5F0;
+    border-left: 3px solid #1A5632;
+}
+
+.policy-brief-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.65rem;
+}
+
+.policy-brief .eyebrow {
+    margin-bottom: 0;
+}
+
+.policy-placeholder {
+    color: #66706A;
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.policy-brief h3 {
+    color: #17201B;
+    font-size: 0.9375rem;
+    margin-bottom: 0.35rem;
+}
+
+.policy-brief p {
+    color: #46524A;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+.policy-brief-meta {
+    display: block;
+    color: #66706A;
+    font-size: 0.6875rem;
+    margin-top: 0.65rem;
 }
 
 .form-group {
