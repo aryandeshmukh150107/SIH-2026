@@ -254,6 +254,53 @@ a:hover {
     white-space: nowrap;
 }
 
+.dashboard-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard-filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    background: #EEF2ED;
+    border: 1px solid #D9DDD8;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-filters label {
+    margin: 0;
+    min-width: 190px;
+}
+
+.dashboard-filter-select {
+    display: block;
+    width: 100%;
+    margin-top: 0.3rem;
+    padding: 0.55rem 0.65rem;
+    color: #17201B;
+    background: #FFFFFF;
+    border: 1px solid #C7CEC8;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.dashboard-filter-select:focus {
+    outline: 2px solid rgba(26, 86, 50, 0.25);
+    border-color: #1A5632;
+}
+
+.filter-context {
+    color: #66706A;
+    font-size: 0.75rem;
+    padding-bottom: 0.65rem;
+    margin-left: auto;
+}
+
 .metric-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -314,6 +361,60 @@ a:hover {
 .dashboard-panel {
     padding: 1.25rem;
 }
+
+.trend-panel {
+    margin-bottom: 1rem;
+}
+
+.trend-chart {
+    min-height: 150px;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 0.5rem 0 0;
+    border-bottom: 1px solid #D9DDD8;
+}
+
+.trend-column {
+    flex: 1;
+    min-width: 0;
+    height: 135px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+}
+
+.trend-value,
+.trend-date {
+    color: #66706A;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.trend-bar {
+    width: min(2.5rem, 80%);
+    min-height: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    background: #EDEEE9;
+    overflow: hidden;
+}
+
+.trend-bar i {
+    display: block;
+    flex: none;
+    width: 100%;
+}
+
+.trend-positive { background: #1A5632; }
+.trend-neutral { background: #89938C; }
+.trend-negative { background: #A83232; }
 
 .panel-heading {
     border-bottom: 1px solid #EDEEE9;
@@ -926,6 +1027,26 @@ a:hover {
         gap: 0.5rem;
     }
 
+    .dashboard-heading-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dashboard-filters {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .dashboard-filters label {
+        min-width: 0;
+    }
+
+    .filter-context {
+        margin-left: 0;
+        padding-bottom: 0;
+    }
+
     .metric-grid {
         gap: 0.75rem;
     }
@@ -948,6 +1069,10 @@ a:hover {
         grid-column: 1 / -1;
         grid-row: 2;
         white-space: normal;
+    }
+
+    .trend-chart {
+        gap: 0.45rem;
     }
 
     .info-panel {

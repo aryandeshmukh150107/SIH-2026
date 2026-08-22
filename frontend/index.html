@@ -51,7 +51,28 @@
                     <h2>Feedback analytics</h2>
                     <p>Aggregated sentiment from the latest comments received through the portal.</p>
                 </div>
-                <span class="dashboard-updated" id="dashboardUpdated">Waiting for data</span>
+                <div class="dashboard-heading-actions">
+                    <span class="dashboard-updated" id="dashboardUpdated">Waiting for data</span>
+                    <button type="button" id="refreshDashboard" class="btn-secondary">Refresh data</button>
+                </div>
+            </div>
+
+            <div class="dashboard-filters" aria-label="Analytics filters">
+                <label for="dashboardMinistry">Ministry
+                    <select id="dashboardMinistry" class="dashboard-filter-select">
+                        <option value="all">All ministries</option>
+                    </select>
+                </label>
+                <label for="dashboardSentiment">Sentiment
+                    <select id="dashboardSentiment" class="dashboard-filter-select">
+                        <option value="all">All sentiments</option>
+                        <option value="positive">Positive</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="negative">Negative</option>
+                        <option value="pending">Pending analysis</option>
+                    </select>
+                </label>
+                <span class="filter-context" id="filterContext">Showing all comments</span>
             </div>
 
             <div class="metric-grid" aria-label="Feedback summary">
@@ -75,6 +96,11 @@
                     <strong id="metricNegative">0%</strong>
                     <span class="metric-note" id="metricNegativeCount">0 comments</span>
                 </div>
+                <div class="metric-card">
+                    <span class="metric-label">Pending analysis</span>
+                    <strong id="metricPending">0</strong>
+                    <span class="metric-note">Awaiting sentiment processing</span>
+                </div>
             </div>
 
             <div class="dashboard-grid">
@@ -97,6 +123,16 @@
                     <div class="ministry-list" id="ministryList"></div>
                 </section>
             </div>
+
+            <section class="dashboard-panel trend-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Sentiment over time</h3>
+                        <p>Daily analyzed comment volume for the selected view.</p>
+                    </div>
+                </div>
+                <div class="trend-chart" id="trendChart"></div>
+            </section>
 
             <section class="dashboard-panel recent-panel">
                 <div class="panel-heading">
@@ -311,6 +347,9 @@
         const dashboardView = document.getElementById('dashboardView');
         const commentsView = document.getElementById('commentsView');
         const navLinks = document.querySelectorAll('.nav-link');
+        const dashboardMinistry = document.getElementById('dashboardMinistry');
+        const dashboardSentiment = document.getElementById('dashboardSentiment');
+        const refreshDashboard = document.getElementById('refreshDashboard');
 
         // --- Helper: set status message with CSS class ---
         function setStatus(message, type) {
@@ -577,26 +616,41 @@
         }
 
         function renderDashboard() {
+            const selectedMinistry = dashboardMinistry.value;
+            const selectedSentiment = dashboardSentiment.value;
+            const filteredComments = comments.filter(comment => {
+                const ministryMatches = selectedMinistry === 'all' || comment.ministry === selectedMinistry;
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                const sentimentMatches = selectedSentiment === 'all' || (selectedSentiment === 'pending' ? !sentiment : sentiment === selectedSentiment);
+                return ministryMatches && sentimentMatches;
+            });
             const counts = { positive: 0, neutral: 0, negative: 0 };
             comments.forEach(comment => {
                 const sentiment = String(comment.sentiment_type || '').toLowerCase();
                 if (Object.prototype.hasOwnProperty.call(counts, sentiment)) counts[sentiment]++;
             });
-            const analyzedCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+            const filteredCounts = { positive: 0, neutral: 0, negative: 0 };
+            filteredComments.forEach(comment => {
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(filteredCounts, sentiment)) filteredCounts[sentiment]++;
+            });
+            const analyzedCount = Object.values(filteredCounts).reduce((sum, count) => sum + count, 0);
             const percentage = value => analyzedCount ? Math.round((value / analyzedCount) * 100) : 0;
 
-            document.getElementById('metricTotal').textContent = comments.length;
+            document.getElementById('metricTotal').textContent = filteredComments.length;
+            document.getElementById('metricPending').textContent = filteredComments.length - analyzedCount;
             ['positive', 'neutral', 'negative'].forEach(sentiment => {
-                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1)).textContent = percentage(counts[sentiment]) + '%';
-                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1) + 'Count').textContent = counts[sentiment] + ' comments';
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1)).textContent = percentage(filteredCounts[sentiment]) + '%';
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1) + 'Count').textContent = filteredCounts[sentiment] + ' comments';
             });
+            document.getElementById('filterContext').textContent = selectedMinistry === 'all' && selectedSentiment === 'all' ? 'Showing all comments' : 'Showing ' + filteredComments.length + ' filtered comments';
 
             document.getElementById('sentimentBars').innerHTML = ['positive', 'neutral', 'negative'].map(sentiment =>
-                '<div class="sentiment-bar-row"><div class="sentiment-bar-label"><span>' + sentiment + '</span><strong>' + percentage(counts[sentiment]) + '%</strong></div><div class="sentiment-bar-track"><span class="sentiment-bar-fill sentiment-' + sentiment + '" style="width:' + percentage(counts[sentiment]) + '%"></span></div></div>'
+                '<div class="sentiment-bar-row"><div class="sentiment-bar-label"><span>' + sentiment + '</span><strong>' + percentage(filteredCounts[sentiment]) + '%</strong></div><div class="sentiment-bar-track"><span class="sentiment-bar-fill sentiment-' + sentiment + '" style="width:' + percentage(filteredCounts[sentiment]) + '%"></span></div></div>'
             ).join('');
 
             const ministries = {};
-            comments.forEach(comment => {
+            filteredComments.forEach(comment => {
                 const ministry = comment.ministry || 'Unassigned';
                 ministries[ministry] = (ministries[ministry] || 0) + 1;
             });
@@ -605,12 +659,37 @@
                 '<div class="ministry-row"><span title="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[0]) + '</span><strong>' + entry[1] + '</strong></div>'
             ).join('') : '<p class="dashboard-empty">No ministry data available yet.</p>';
 
-            const recent = comments.slice(0, 4);
+            const recent = filteredComments.slice(0, 4);
             document.getElementById('recentList').innerHTML = recent.length ? recent.map(comment => {
                 const sentiment = String(comment.sentiment_type || 'processing').toLowerCase();
                 return '<div class="recent-row"><span class="recent-date">' + escapeHtml(comment.comment_date || 'Recent') + '</span><p>' + escapeHtml(comment.preprocessing || comment.original_text || '') + '</p><strong class="sentiment-' + sentiment + '">' + escapeHtml(sentiment) + '</strong></div>';
             }).join('') : '<p class="dashboard-empty">Submit or load comments to see analytics.</p>';
+            renderTrend(filteredComments);
             document.getElementById('dashboardUpdated').textContent = comments.length ? 'Updated just now' : 'Waiting for data';
+        }
+
+        function renderTrend(filteredComments) {
+            const dates = {};
+            filteredComments.forEach(comment => {
+                const date = comment.comment_date || 'Unknown date';
+                if (!dates[date]) dates[date] = { positive: 0, neutral: 0, negative: 0 };
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(dates[date], sentiment)) dates[date][sentiment]++;
+            });
+            const entries = Object.entries(dates).sort((a, b) => a[0].localeCompare(b[0])).slice(-7);
+            const maximum = Math.max(1, ...entries.map(entry => Object.values(entry[1]).reduce((sum, count) => sum + count, 0)));
+            document.getElementById('trendChart').innerHTML = entries.length ? entries.map(entry => {
+                const total = Object.values(entry[1]).reduce((sum, count) => sum + count, 0);
+                const height = Math.max(8, Math.round((total / maximum) * 100));
+                return '<div class="trend-column"><span class="trend-value">' + total + '</span><div class="trend-bar" style="height:' + height + '%"><i class="trend-positive" style="height:' + (entry[1].positive / total * 100 || 0) + '%"></i><i class="trend-neutral" style="height:' + (entry[1].neutral / total * 100 || 0) + '%"></i><i class="trend-negative" style="height:' + (entry[1].negative / total * 100 || 0) + '%"></i></div><span class="trend-date">' + escapeHtml(entry[0]) + '</span></div>';
+            }).join('') : '<p class="dashboard-empty">No dated comments available for the trend.</p>';
+        }
+
+        function populateDashboardFilters() {
+            const currentValue = dashboardMinistry.value;
+            const ministries = [...new Set(comments.map(comment => comment.ministry).filter(Boolean))].sort();
+            dashboardMinistry.innerHTML = '<option value="all">All ministries</option>' + ministries.map(ministry => '<option value="' + escapeHtml(ministry) + '">' + escapeHtml(ministry) + '</option>').join('');
+            dashboardMinistry.value = ministries.includes(currentValue) ? currentValue : 'all';
         }
 
         navLinks.forEach(link => link.addEventListener('click', function () {
@@ -619,6 +698,9 @@
             commentsView.hidden = showingDashboard;
             navLinks.forEach(navLink => navLink.classList.toggle('active', navLink === this));
         }));
+        dashboardMinistry.addEventListener('change', renderDashboard);
+        dashboardSentiment.addEventListener('change', renderDashboard);
+        refreshDashboard.addEventListener('click', loadCommentsFromSupabase);
 
         // --- Load existing comments from Supabase on load ---
         async function loadCommentsFromSupabase() {
@@ -633,6 +715,7 @@
                     const data = await res.json();
                     if (Array.isArray(data)) {
                         comments = data;
+                        populateDashboardFilters();
                         renderComments();
                     }
                 }
