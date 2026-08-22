@@ -705,20 +705,30 @@
         // --- Load existing comments from Supabase on load ---
         async function loadCommentsFromSupabase() {
             try {
-                const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + '?select=*&order=comment_id.desc', {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
-                    }
-                });
-                if (res.ok) {
+                const pageSize = 50;
+                const allComments = [];
+                let page = 0;
+
+                while (true) {
+                    const params = '?select=*&order=comment_id.desc&limit=' + pageSize + '&offset=' + (page * pageSize);
+                    const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + params, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                        }
+                    });
+                    if (!res.ok) throw new Error('Could not load comments (' + res.status + ').');
+
                     const data = await res.json();
-                    if (Array.isArray(data)) {
-                        comments = data;
-                        populateDashboardFilters();
-                        renderComments();
-                    }
+                    if (!Array.isArray(data) || data.length === 0) break;
+                    allComments.push(...data);
+                    if (data.length < pageSize) break;
+                    page++;
                 }
+
+                comments = allComments;
+                populateDashboardFilters();
+                renderComments();
             } catch (err) {
                 console.warn('Could not load comments from Supabase:', err);
             }
