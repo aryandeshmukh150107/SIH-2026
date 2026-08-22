@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> <!--red hair tattooed baddie-->
 <html lang="en">
 
 <head>
@@ -247,7 +247,7 @@
 
         // --- Populate dropdown & Custom UI ---
         ministrySelect.classList.add('hidden-select');
-        
+
         const customSelectWrapper = document.createElement('div');
         customSelectWrapper.className = 'custom-select-wrapper';
         ministrySelect.parentNode.insertBefore(customSelectWrapper, ministrySelect.nextSibling);
@@ -289,7 +289,7 @@
             const customOpt = document.createElement('div');
             customOpt.className = 'custom-option';
             customOpt.textContent = name;
-            customOpt.addEventListener('click', function() {
+            customOpt.addEventListener('click', function () {
                 ministrySelect.value = name;
                 customSelectTrigger.querySelector('span').textContent = name;
                 customSelectWrapper.classList.remove('open');
@@ -299,7 +299,7 @@
             customOptionsList.appendChild(customOpt);
         });
 
-        customSearch.addEventListener('input', function(e) {
+        customSearch.addEventListener('input', function (e) {
             const filter = e.target.value.toLowerCase();
             let visibleCount = 0;
             Array.from(customOptionsList.children).forEach(child => {
@@ -314,7 +314,7 @@
             noResultsMsg.style.display = visibleCount === 0 ? 'block' : 'none';
         });
 
-        customSelectTrigger.addEventListener('click', function() {
+        customSelectTrigger.addEventListener('click', function () {
             customSelectWrapper.classList.toggle('open');
             if (customSelectWrapper.classList.contains('open')) {
                 customSearch.value = '';
@@ -323,7 +323,7 @@
             }
         });
 
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!customSelectWrapper.contains(e.target)) {
                 customSelectWrapper.classList.remove('open');
             }
