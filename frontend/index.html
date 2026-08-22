@@ -20,6 +20,10 @@
                 <span class="header-brand-title">E-Consultation Feedback Portal</span>
             </div>
             <div class="header-meta">
+                <nav class="site-nav" aria-label="Primary navigation">
+                    <button type="button" class="nav-link active" data-view="commentsView">Comments</button>
+                    <button type="button" class="nav-link" data-view="dashboardView">Analytics</button>
+                </nav>
                 <span class="header-status">
                     <span class="header-status-dot"></span>
                     System active
@@ -39,7 +43,74 @@
     <!-- Main Content -->
     <main class="main-container">
 
+        <!-- Analytics Dashboard -->
+        <section id="dashboardView" class="dashboard-view" hidden>
+            <div class="view-heading">
+                <div>
+                    <p class="eyebrow">Decision support</p>
+                    <h2>Feedback analytics</h2>
+                    <p>Aggregated sentiment from the latest comments received through the portal.</p>
+                </div>
+                <span class="dashboard-updated" id="dashboardUpdated">Waiting for data</span>
+            </div>
+
+            <div class="metric-grid" aria-label="Feedback summary">
+                <div class="metric-card metric-card-primary">
+                    <span class="metric-label">Total comments</span>
+                    <strong id="metricTotal">0</strong>
+                    <span class="metric-note">Loaded from the public feedback table</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Positive</span>
+                    <strong id="metricPositive">0%</strong>
+                    <span class="metric-note" id="metricPositiveCount">0 comments</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Neutral</span>
+                    <strong id="metricNeutral">0%</strong>
+                    <span class="metric-note" id="metricNeutralCount">0 comments</span>
+                </div>
+                <div class="metric-card metric-card-alert">
+                    <span class="metric-label">Negative</span>
+                    <strong id="metricNegative">0%</strong>
+                    <span class="metric-note" id="metricNegativeCount">0 comments</span>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <section class="dashboard-panel sentiment-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Sentiment distribution</h3>
+                            <p>Share of comments with a completed sentiment score.</p>
+                        </div>
+                    </div>
+                    <div class="sentiment-bars" id="sentimentBars"></div>
+                </section>
+                <section class="dashboard-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Top ministries</h3>
+                            <p>Where public feedback is concentrated.</p>
+                        </div>
+                    </div>
+                    <div class="ministry-list" id="ministryList"></div>
+                </section>
+            </div>
+
+            <section class="dashboard-panel recent-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Recent feedback signals</h3>
+                        <p>Latest comments requiring attention or review.</p>
+                    </div>
+                </div>
+                <div class="recent-list" id="recentList"></div>
+            </section>
+        </section>
+
         <!-- Left Column: Feedback Form -->
+        <div id="commentsView" class="comments-view">
         <div class="primary-column">
             <div class="form-panel">
                 <h2 class="form-panel-title">Submit your feedback</h2>
@@ -138,6 +209,8 @@
             </div>
         </section>
 
+        </div>
+
     </main>
 
     <!-- Footer -->
@@ -235,6 +308,9 @@
         const commentCount = document.getElementById('commentCount');
         const exportBtn = document.getElementById('exportBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const dashboardView = document.getElementById('dashboardView');
+        const commentsView = document.getElementById('commentsView');
+        const navLinks = document.querySelectorAll('.nav-link');
 
         // --- Helper: set status message with CSS class ---
         function setStatus(message, type) {
@@ -497,7 +573,52 @@
             commentCount.textContent = comments.length;
             exportBtn.disabled = comments.length === 0;
             clearBtn.disabled = comments.length === 0;
+            renderDashboard();
         }
+
+        function renderDashboard() {
+            const counts = { positive: 0, neutral: 0, negative: 0 };
+            comments.forEach(comment => {
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(counts, sentiment)) counts[sentiment]++;
+            });
+            const analyzedCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+            const percentage = value => analyzedCount ? Math.round((value / analyzedCount) * 100) : 0;
+
+            document.getElementById('metricTotal').textContent = comments.length;
+            ['positive', 'neutral', 'negative'].forEach(sentiment => {
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1)).textContent = percentage(counts[sentiment]) + '%';
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1) + 'Count').textContent = counts[sentiment] + ' comments';
+            });
+
+            document.getElementById('sentimentBars').innerHTML = ['positive', 'neutral', 'negative'].map(sentiment =>
+                '<div class="sentiment-bar-row"><div class="sentiment-bar-label"><span>' + sentiment + '</span><strong>' + percentage(counts[sentiment]) + '%</strong></div><div class="sentiment-bar-track"><span class="sentiment-bar-fill sentiment-' + sentiment + '" style="width:' + percentage(counts[sentiment]) + '%"></span></div></div>'
+            ).join('');
+
+            const ministries = {};
+            comments.forEach(comment => {
+                const ministry = comment.ministry || 'Unassigned';
+                ministries[ministry] = (ministries[ministry] || 0) + 1;
+            });
+            const ministryEntries = Object.entries(ministries).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            document.getElementById('ministryList').innerHTML = ministryEntries.length ? ministryEntries.map(entry =>
+                '<div class="ministry-row"><span title="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[0]) + '</span><strong>' + entry[1] + '</strong></div>'
+            ).join('') : '<p class="dashboard-empty">No ministry data available yet.</p>';
+
+            const recent = comments.slice(0, 4);
+            document.getElementById('recentList').innerHTML = recent.length ? recent.map(comment => {
+                const sentiment = String(comment.sentiment_type || 'processing').toLowerCase();
+                return '<div class="recent-row"><span class="recent-date">' + escapeHtml(comment.comment_date || 'Recent') + '</span><p>' + escapeHtml(comment.preprocessing || comment.original_text || '') + '</p><strong class="sentiment-' + sentiment + '">' + escapeHtml(sentiment) + '</strong></div>';
+            }).join('') : '<p class="dashboard-empty">Submit or load comments to see analytics.</p>';
+            document.getElementById('dashboardUpdated').textContent = comments.length ? 'Updated just now' : 'Waiting for data';
+        }
+
+        navLinks.forEach(link => link.addEventListener('click', function () {
+            const showingDashboard = this.dataset.view === 'dashboardView';
+            dashboardView.hidden = !showingDashboard;
+            commentsView.hidden = showingDashboard;
+            navLinks.forEach(navLink => navLink.classList.toggle('active', navLink === this));
+        }));
 
         // --- Load existing comments from Supabase on load ---
         async function loadCommentsFromSupabase() {
