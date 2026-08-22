@@ -454,8 +454,10 @@ a:hover {
 }
 
 .trend-chart {
-    min-height: 250px;
-    padding-top: 0.25rem;
+    min-height: 280px;
+    padding: 0.75rem 0.25rem 0;
+    background: #FBFCFA;
+    border: 1px solid #EDEEE9;
 }
 
 .trend-svg {
@@ -466,8 +468,9 @@ a:hover {
 }
 
 .chart-grid-line {
-    stroke: #EDEEE9;
+    stroke: #E4E9E4;
     stroke-width: 1;
+    stroke-dasharray: 3 5;
 }
 
 .chart-axis-label,
@@ -479,7 +482,7 @@ a:hover {
 
 .chart-line {
     fill: none;
-    stroke-width: 3;
+    stroke-width: 2.5;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
@@ -487,7 +490,7 @@ a:hover {
 .chart-line-positive { stroke: #1A5632; }
 .chart-line-neutral { stroke: #89938C; }
 .chart-line-negative { stroke: #A83232; }
-.chart-dot { stroke: #FFFFFF; stroke-width: 2; }
+.chart-dot { stroke: #FFFFFF; stroke-width: 2.5; }
 .chart-dot-positive { fill: #1A5632; }
 .chart-dot-neutral { fill: #89938C; }
 .chart-dot-negative { fill: #A83232; }

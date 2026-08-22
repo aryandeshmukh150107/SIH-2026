@@ -685,24 +685,29 @@
                 return;
             }
 
-            const chartWidth = 760;
-            const chartHeight = 250;
-            const padding = { top: 22, right: 18, bottom: 42, left: 34 };
+            const chartWidth = 820;
+            const chartHeight = 280;
+            const padding = { top: 18, right: 24, bottom: 48, left: 42 };
             const plotWidth = chartWidth - padding.left - padding.right;
             const plotHeight = chartHeight - padding.top - padding.bottom;
             const maximum = Math.max(1, ...entries.map(entry => Math.max(...Object.values(entry[1]))));
             const xPosition = index => padding.left + (entries.length === 1 ? plotWidth / 2 : index * plotWidth / (entries.length - 1));
             const yPosition = value => padding.top + plotHeight - (value / maximum) * plotHeight;
             const series = ['positive', 'neutral', 'negative'];
-            const gridLines = [0, 0.5, 1].map(ratio => {
+            const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
                 const y = padding.top + plotHeight * ratio;
                 const label = Math.round(maximum * (1 - ratio));
                 return '<line class="chart-grid-line" x1="' + padding.left + '" y1="' + y + '" x2="' + (chartWidth - padding.right) + '" y2="' + y + '"></line><text class="chart-axis-label" x="' + (padding.left - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + label + '</text>';
             }).join('');
-            const dateLabels = entries.map((entry, index) => '<text class="chart-date-label" x="' + xPosition(index) + '" y="' + (chartHeight - 14) + '" text-anchor="middle">' + escapeHtml(entry[0].slice(5)) + '</text>').join('');
+            const labelStep = Math.max(1, Math.ceil(entries.length / 6));
+            const dateLabels = entries.map((entry, index) => {
+                if (index % labelStep !== 0 && index !== entries.length - 1) return '';
+                const dateLabel = entry[0].length >= 10 ? entry[0].slice(5) : entry[0];
+                return '<text class="chart-date-label" x="' + xPosition(index) + '" y="' + (chartHeight - 16) + '" text-anchor="middle">' + escapeHtml(dateLabel) + '</text>';
+            }).join('');
             const lines = series.map(sentiment => {
                 const points = entries.map((entry, index) => xPosition(index) + ',' + yPosition(entry[1][sentiment])).join(' ');
-                const dots = entries.map((entry, index) => '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(entry[1][sentiment]) + '" r="3"><title>' + escapeHtml(entry[0]) + ': ' + entry[1][sentiment] + ' ' + sentiment + '</title></circle>').join('');
+                const dots = entries.map((entry, index) => '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(entry[1][sentiment]) + '" r="4"><title>' + escapeHtml(entry[0]) + ': ' + entry[1][sentiment] + ' ' + sentiment + '</title></circle>').join('');
                 return '<polyline class="chart-line chart-line-' + sentiment + '" points="' + points + '"></polyline>' + dots;
             }).join('');
             document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Sentiment trends over time">' + gridLines + dateLabels + lines + '</svg>';
