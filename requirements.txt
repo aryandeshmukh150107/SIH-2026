@@ -1,3 +1,18 @@
+# SIH-2026 setup instructions (run these commands from the repository root):
+# PowerShell:
+#   python -m venv .venv
+#   .\.venv\Scripts\Activate.ps1
+#   python -m pip install -r requirements.txt
+#   .\start.bat
+#
+# Git Bash:
+#   python -m venv .venv
+#   source .venv/Scripts/activate
+#   python -m pip install -r requirements.txt
+#   cmd.exe //c start.bat
+#
+# Then open http://localhost:8000 if the browser does not open automatically.
+
 fastapi
 uvicorn
 websockets
