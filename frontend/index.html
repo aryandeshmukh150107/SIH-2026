@@ -448,6 +448,7 @@
                     if (!sentimentRes.ok) {
                         const sentErrText = await sentimentRes.text();
                         console.error(`[API Sentiment Error] HTTP ${sentimentRes.status}`, sentErrText);
+                        throw new Error(`Sentiment processing failed (${sentimentRes.status}): ${sentErrText}`);
                     } else {
                         const sentData = await sentimentRes.json();
                         console.log(`[API Sentiment Success] HTTP ${sentimentRes.status}`, sentData);

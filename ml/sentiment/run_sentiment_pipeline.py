@@ -32,6 +32,7 @@ PK_COL = "comment_id"
 TEXT_COL = "preprocessing"
 SCORE_COL = "sentiment_score"
 TYPE_COL = "sentiment_type"
+DEFAULT_SUPABASE_URL = "https://nmbiilbiyxgfsfusnzht.supabase.co"
 
 # ---------------------------------------------------------------------------
 # Lazy singletons — initialised on first call to run_pipeline()
@@ -49,9 +50,16 @@ def _get_supabase():
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
 
-    if not url or not key:
+    # Railway was configured with the literal value from .env.example.  That
+    # placeholder is not a hostname, so use this application's Supabase URL
+    # until the deployment variable is corrected.
+    if not url or "<your-project-ref>" in url:
+        print("[sentiment] SUPABASE_URL is missing or a template placeholder; using the configured project URL.")
+        url = DEFAULT_SUPABASE_URL
+
+    if not key:
         raise RuntimeError(
-            "SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables must be set."
+            "SUPABASE_SERVICE_KEY environment variable must be set."
         )
 
     try:
