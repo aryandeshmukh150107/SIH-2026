@@ -93,16 +93,9 @@ class CleanResponse(BaseModel):
     cleaned_text: str
 
 @app.post("/clean", response_model=CleanResponse)
-def clean_text_endpoint(request: CleanRequest, background_tasks: BackgroundTasks):
-    """
-    Clean the submitted text before it is saved to Supabase.
-    After returning the cleaned text, automatically triggers the sentiment
-    pipeline in the background to score any unprocessed rows.
-    """
+def clean_text_endpoint(request: CleanRequest):
+    """Clean the submitted text before it is saved to Supabase."""
     cleaned = clean_text(request.text)
-    # Auto-trigger sentiment scoring after every text cleaning
-    if _sentiment_ready:
-        background_tasks.add_task(_safe_run_pipeline)
     return CleanResponse(cleaned_text=cleaned)
 
 
