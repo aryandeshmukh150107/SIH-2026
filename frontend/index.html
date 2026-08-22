@@ -116,8 +116,8 @@
                 <section class="dashboard-panel">
                     <div class="panel-heading">
                         <div>
-                            <h3>Top ministries</h3>
-                            <p>Where public feedback is concentrated.</p>
+                            <h3 id="ministryPanelTitle">Top ministries</h3>
+                            <p id="ministryPanelDescription">Where public feedback is concentrated.</p>
                         </div>
                     </div>
                     <div class="ministry-list" id="ministryList"></div>
@@ -676,9 +676,7 @@
                 ministries[ministry] = (ministries[ministry] || 0) + 1;
             });
             const ministryEntries = Object.entries(ministries).sort((a, b) => b[1] - a[1]).slice(0, 5);
-            document.getElementById('ministryList').innerHTML = ministryEntries.length ? ministryEntries.map(entry =>
-                '<div class="ministry-row"><span title="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[0]) + '</span><strong>' + entry[1] + '</strong></div>'
-            ).join('') : '<p class="dashboard-empty">No ministry data available yet.</p>';
+            renderMinistryPanel(selectedMinistry, ministryEntries);
 
             const recent = filteredComments.slice(0, 4);
             document.getElementById('recentList').innerHTML = recent.length ? recent.map(comment => {
@@ -687,6 +685,36 @@
             }).join('') : '<p class="dashboard-empty">Submit or load comments to see analytics.</p>';
             renderTrend(filteredComments);
             document.getElementById('dashboardUpdated').textContent = comments.length ? 'Updated just now' : 'Waiting for data';
+        }
+
+        function renderMinistryPanel(selectedMinistry, ministryEntries) {
+            const panelTitle = document.getElementById('ministryPanelTitle');
+            const panelDescription = document.getElementById('ministryPanelDescription');
+            const ministryList = document.getElementById('ministryList');
+
+            if (selectedMinistry === 'all') {
+                panelTitle.textContent = 'Top ministries';
+                panelDescription.textContent = 'Where public feedback is concentrated.';
+                ministryList.innerHTML = ministryEntries.length ? ministryEntries.map(entry =>
+                    '<div class="ministry-row"><span title="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[0]) + '</span><strong>' + entry[1] + '</strong></div>'
+                ).join('') : '<p class="dashboard-empty">No ministry data available yet.</p>';
+                return;
+            }
+
+            const policy = findPolicyForMinistry(selectedMinistry);
+            panelTitle.textContent = 'Latest policy update';
+            panelDescription.textContent = selectedMinistry;
+            if (!policy) {
+                ministryList.innerHTML = '<p class="dashboard-empty">No policy update available for this ministry.</p>';
+                return;
+            }
+
+            const title = readPolicyField(policy, ['policy_name', 'policy_title', 'title', 'name']) || 'Ministry policy update';
+            const text = readPolicyField(policy, ['policy_text', 'description', 'summary', 'policy', 'details']);
+            const updateDate = readPolicyField(policy, ['updated_at', 'last_updated', 'release_date', 'date', 'created_at']);
+            ministryList.innerHTML = '<div class="policy-update"><h4>' + escapeHtml(title) + '</h4>' +
+                (text ? '<p>' + escapeHtml(text) + '</p>' : '') +
+                (updateDate ? '<span class="policy-brief-meta">Updated: ' + escapeHtml(updateDate) + '</span>' : '') + '</div>';
         }
 
         function renderTrend(filteredComments) {
@@ -830,10 +858,15 @@
 
         function findPolicyForMinistry(ministry) {
             const selectedName = normalizeMinistryName(ministry);
-            return policies.find(policy => {
+            const matchingPolicies = policies.filter(policy => {
                 const policyName = normalizeMinistryName(readPolicyField(policy, ['ministry', 'ministry_name', 'department']));
                 return policyName && (policyName === selectedName || policyName.includes(selectedName) || selectedName.includes(policyName));
             });
+            return matchingPolicies.sort((first, second) => {
+                const firstDate = new Date(readPolicyField(first, ['updated_at', 'last_updated', 'release_date', 'date', 'created_at'])).getTime() || 0;
+                const secondDate = new Date(readPolicyField(second, ['updated_at', 'last_updated', 'release_date', 'date', 'created_at'])).getTime() || 0;
+                return secondDate - firstDate;
+            })[0];
         }
 
         function renderSelectedPolicy(ministry) {
@@ -868,6 +901,7 @@
                 const data = await res.json();
                 policies = Array.isArray(data) ? data : [];
                 renderSelectedPolicy(ministrySelect.value);
+                renderDashboard();
             } catch (err) {
                 console.warn('Could not load policies from Supabase:', err);
             }
