@@ -820,8 +820,24 @@
             return matchingKey ? policy[matchingKey] : '';
         }
 
+        function normalizeMinistryName(name) {
+            return String(name || '').toLowerCase()
+                .replace(/&/g, 'and')
+                .replace(/[.'’']/g, '')
+                .replace(/[^a-z0-9]+/g, '')
+                .replace(/^ministryof/, '');
+        }
+
+        function findPolicyForMinistry(ministry) {
+            const selectedName = normalizeMinistryName(ministry);
+            return policies.find(policy => {
+                const policyName = normalizeMinistryName(readPolicyField(policy, ['ministry', 'ministry_name', 'department']));
+                return policyName && (policyName === selectedName || policyName.includes(selectedName) || selectedName.includes(policyName));
+            });
+        }
+
         function renderSelectedPolicy(ministry) {
-            const policy = policies.find(item => readPolicyField(item, ['ministry', 'ministry_name', 'department']) === ministry);
+            const policy = findPolicyForMinistry(ministry);
             if (!ministry) {
                 selectedPolicyTitle.textContent = 'Select a ministry to view its policy';
                 selectedPolicyText.textContent = 'The relevant ministry policy will appear here before you submit feedback.';
@@ -834,10 +850,10 @@
                 selectedPolicyMeta.textContent = ministry;
                 return;
             }
-            selectedPolicyTitle.textContent = readPolicyField(policy, ['policy_title', 'title', 'name']) || 'Ministry policy brief';
-            selectedPolicyText.textContent = readPolicyField(policy, ['policy_text', 'description', 'summary', 'policy', 'details']) || 'Policy details are not available in this record yet.';
-            const updated = readPolicyField(policy, ['updated_at', 'last_updated', 'date']);
-            selectedPolicyMeta.textContent = updated ? 'For ' + ministry + ' | Available policy date: ' + updated : ministry + ' | Placeholder policy record';
+            selectedPolicyTitle.textContent = readPolicyField(policy, ['policy_name', 'policy_title', 'title', 'name']) || 'Ministry policy brief';
+            selectedPolicyText.textContent = readPolicyField(policy, ['policy_text', 'description', 'summary', 'policy', 'details']) || 'This policy record is available as a reference for your feedback.';
+            const releaseDate = readPolicyField(policy, ['release_date', 'updated_at', 'last_updated', 'date']);
+            selectedPolicyMeta.textContent = releaseDate ? 'For ' + ministry + ' | Released: ' + releaseDate : ministry + ' | Placeholder policy record';
         }
 
         async function loadPoliciesFromSupabase() {
