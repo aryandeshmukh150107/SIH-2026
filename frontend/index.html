@@ -111,7 +111,7 @@
                             <p>Share of comments with a completed sentiment score.</p>
                         </div>
                     </div>
-                    <div class="sentiment-bars" id="sentimentBars"></div>
+                    <div class="distribution-chart" id="distributionChart"></div>
                 </section>
                 <section class="dashboard-panel">
                     <div class="panel-heading">
@@ -128,7 +128,12 @@
                 <div class="panel-heading">
                     <div>
                         <h3>Sentiment over time</h3>
-                        <p>Daily analyzed comment volume for the selected view.</p>
+                        <p>Daily sentiment signals for the selected view.</p>
+                    </div>
+                    <div class="chart-legend" aria-label="Chart legend">
+                        <span><i class="legend-positive"></i>Positive</span>
+                        <span><i class="legend-neutral"></i>Neutral</span>
+                        <span><i class="legend-negative"></i>Negative</span>
                     </div>
                 </div>
                 <div class="trend-chart" id="trendChart"></div>
@@ -645,9 +650,7 @@
             });
             document.getElementById('filterContext').textContent = selectedMinistry === 'all' && selectedSentiment === 'all' ? 'Showing all comments' : 'Showing ' + filteredComments.length + ' filtered comments';
 
-            document.getElementById('sentimentBars').innerHTML = ['positive', 'neutral', 'negative'].map(sentiment =>
-                '<div class="sentiment-bar-row"><div class="sentiment-bar-label"><span>' + sentiment + '</span><strong>' + percentage(filteredCounts[sentiment]) + '%</strong></div><div class="sentiment-bar-track"><span class="sentiment-bar-fill sentiment-' + sentiment + '" style="width:' + percentage(filteredCounts[sentiment]) + '%"></span></div></div>'
-            ).join('');
+            renderDistribution(filteredCounts, analyzedCount, percentage);
 
             const ministries = {};
             filteredComments.forEach(comment => {
@@ -676,13 +679,47 @@
                 const sentiment = String(comment.sentiment_type || '').toLowerCase();
                 if (Object.prototype.hasOwnProperty.call(dates[date], sentiment)) dates[date][sentiment]++;
             });
-            const entries = Object.entries(dates).sort((a, b) => a[0].localeCompare(b[0])).slice(-7);
-            const maximum = Math.max(1, ...entries.map(entry => Object.values(entry[1]).reduce((sum, count) => sum + count, 0)));
-            document.getElementById('trendChart').innerHTML = entries.length ? entries.map(entry => {
-                const total = Object.values(entry[1]).reduce((sum, count) => sum + count, 0);
-                const height = Math.max(8, Math.round((total / maximum) * 100));
-                return '<div class="trend-column"><span class="trend-value">' + total + '</span><div class="trend-bar" style="height:' + height + '%"><i class="trend-positive" style="height:' + (entry[1].positive / total * 100 || 0) + '%"></i><i class="trend-neutral" style="height:' + (entry[1].neutral / total * 100 || 0) + '%"></i><i class="trend-negative" style="height:' + (entry[1].negative / total * 100 || 0) + '%"></i></div><span class="trend-date">' + escapeHtml(entry[0]) + '</span></div>';
-            }).join('') : '<p class="dashboard-empty">No dated comments available for the trend.</p>';
+            const entries = Object.entries(dates).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
+            if (!entries.length) {
+                document.getElementById('trendChart').innerHTML = '<p class="dashboard-empty">No dated comments available for the trend.</p>';
+                return;
+            }
+
+            const chartWidth = 760;
+            const chartHeight = 250;
+            const padding = { top: 22, right: 18, bottom: 42, left: 34 };
+            const plotWidth = chartWidth - padding.left - padding.right;
+            const plotHeight = chartHeight - padding.top - padding.bottom;
+            const maximum = Math.max(1, ...entries.map(entry => Math.max(...Object.values(entry[1]))));
+            const xPosition = index => padding.left + (entries.length === 1 ? plotWidth / 2 : index * plotWidth / (entries.length - 1));
+            const yPosition = value => padding.top + plotHeight - (value / maximum) * plotHeight;
+            const series = ['positive', 'neutral', 'negative'];
+            const gridLines = [0, 0.5, 1].map(ratio => {
+                const y = padding.top + plotHeight * ratio;
+                const label = Math.round(maximum * (1 - ratio));
+                return '<line class="chart-grid-line" x1="' + padding.left + '" y1="' + y + '" x2="' + (chartWidth - padding.right) + '" y2="' + y + '"></line><text class="chart-axis-label" x="' + (padding.left - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + label + '</text>';
+            }).join('');
+            const dateLabels = entries.map((entry, index) => '<text class="chart-date-label" x="' + xPosition(index) + '" y="' + (chartHeight - 14) + '" text-anchor="middle">' + escapeHtml(entry[0].slice(5)) + '</text>').join('');
+            const lines = series.map(sentiment => {
+                const points = entries.map((entry, index) => xPosition(index) + ',' + yPosition(entry[1][sentiment])).join(' ');
+                const dots = entries.map((entry, index) => '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(entry[1][sentiment]) + '" r="3"><title>' + escapeHtml(entry[0]) + ': ' + entry[1][sentiment] + ' ' + sentiment + '</title></circle>').join('');
+                return '<polyline class="chart-line chart-line-' + sentiment + '" points="' + points + '"></polyline>' + dots;
+            }).join('');
+            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Sentiment trends over time">' + gridLines + dateLabels + lines + '</svg>';
+        }
+
+        function renderDistribution(counts, analyzedCount, percentage) {
+            const totalDegrees = analyzedCount ? 360 : 0;
+            const positiveDegrees = analyzedCount ? counts.positive / analyzedCount * 360 : 0;
+            const neutralDegrees = analyzedCount ? counts.neutral / analyzedCount * 360 : 0;
+            const negativeStart = positiveDegrees + neutralDegrees;
+            const donutStyle = analyzedCount
+                ? 'background: conic-gradient(#1A5632 0deg ' + positiveDegrees + 'deg, #89938C ' + positiveDegrees + 'deg ' + negativeStart + 'deg, #A83232 ' + negativeStart + 'deg ' + totalDegrees + 'deg);'
+                : 'background: #EDEEE9;';
+            const legend = ['positive', 'neutral', 'negative'].map(sentiment =>
+                '<div class="distribution-legend-row"><span><i class="legend-swatch legend-' + sentiment + '"></i>' + sentiment + '</span><strong>' + percentage(counts[sentiment]) + '% <small>(' + counts[sentiment] + ')</small></strong></div>'
+            ).join('');
+            document.getElementById('distributionChart').innerHTML = '<div class="donut-wrap"><div class="donut-chart" style="' + donutStyle + '"><div class="donut-hole"><strong>' + analyzedCount + '</strong><span>analyzed</span></div></div></div><div class="distribution-legend">' + legend + '</div>';
         }
 
         function populateDashboardFilters() {

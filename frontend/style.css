@@ -362,59 +362,156 @@ a:hover {
     padding: 1.25rem;
 }
 
+.sentiment-panel {
+    min-height: 255px;
+}
+
+.distribution-chart {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    min-height: 145px;
+}
+
+.donut-chart {
+    width: 150px;
+    height: 150px;
+    flex: 0 0 150px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+}
+
+.donut-hole {
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #FFFFFF;
+}
+
+.donut-hole strong {
+    color: #17201B;
+    font-size: 1.45rem;
+    line-height: 1.1;
+}
+
+.donut-hole span {
+    color: #66706A;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.distribution-legend {
+    flex: 1;
+}
+
+.distribution-legend-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #EDEEE9;
+    color: #17201B;
+    font-size: 0.8125rem;
+    text-transform: capitalize;
+}
+
+.distribution-legend-row:last-child {
+    border-bottom: 0;
+}
+
+.distribution-legend-row > span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.distribution-legend-row small {
+    color: #66706A;
+    font-size: 0.6875rem;
+    font-weight: 400;
+}
+
+.legend-swatch,
+.chart-legend i {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.legend-positive { background: #1A5632; }
+.legend-neutral { background: #89938C; }
+.legend-negative { background: #A83232; }
+
 .trend-panel {
     margin-bottom: 1rem;
 }
 
 .trend-chart {
-    min-height: 150px;
+    min-height: 250px;
+    padding-top: 0.25rem;
+}
+
+.trend-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.chart-grid-line {
+    stroke: #EDEEE9;
+    stroke-width: 1;
+}
+
+.chart-axis-label,
+.chart-date-label {
+    fill: #89938C;
+    font-family: inherit;
+    font-size: 10px;
+}
+
+.chart-line {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.chart-line-positive { stroke: #1A5632; }
+.chart-line-neutral { stroke: #89938C; }
+.chart-line-negative { stroke: #A83232; }
+.chart-dot { stroke: #FFFFFF; stroke-width: 2; }
+.chart-dot-positive { fill: #1A5632; }
+.chart-dot-neutral { fill: #89938C; }
+.chart-dot-negative { fill: #A83232; }
+
+.panel-heading {
     display: flex;
-    align-items: flex-end;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: 1rem;
-    padding: 0.5rem 0 0;
-    border-bottom: 1px solid #D9DDD8;
 }
 
-.trend-column {
-    flex: 1;
-    min-width: 0;
-    height: 135px;
+.chart-legend {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.35rem;
-}
-
-.trend-value,
-.trend-date {
+    gap: 0.85rem;
     color: #66706A;
     font-size: 0.6875rem;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
 }
 
-.trend-bar {
-    width: min(2.5rem, 80%);
-    min-height: 8px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    background: #EDEEE9;
-    overflow: hidden;
+.chart-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
-
-.trend-bar i {
-    display: block;
-    flex: none;
-    width: 100%;
-}
-
-.trend-positive { background: #1A5632; }
-.trend-neutral { background: #89938C; }
-.trend-negative { background: #A83232; }
 
 .panel-heading {
     border-bottom: 1px solid #EDEEE9;
@@ -980,6 +1077,10 @@ a:hover {
         grid-template-columns: 1fr;
     }
 
+    .distribution-chart {
+        gap: 1.25rem;
+    }
+
     .header-inner {
         padding: 0;
     }
@@ -1073,6 +1174,23 @@ a:hover {
 
     .trend-chart {
         gap: 0.45rem;
+    }
+
+    .panel-heading {
+        flex-direction: column;
+    }
+
+    .chart-legend {
+        white-space: normal;
+    }
+
+    .distribution-chart {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .donut-chart {
+        align-self: center;
     }
 
     .info-panel {
