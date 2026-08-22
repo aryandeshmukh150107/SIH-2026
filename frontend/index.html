@@ -20,6 +20,10 @@
                 <span class="header-brand-title">E-Consultation Feedback Portal</span>
             </div>
             <div class="header-meta">
+                <nav class="site-nav" aria-label="Primary navigation">
+                    <button type="button" class="nav-link active" data-view="commentsView">Comments</button>
+                    <button type="button" class="nav-link" data-view="dashboardView">Analytics</button>
+                </nav>
                 <span class="header-status">
                     <span class="header-status-dot"></span>
                     System active
@@ -39,10 +43,129 @@
     <!-- Main Content -->
     <main class="main-container">
 
+        <!-- Analytics Dashboard -->
+        <section id="dashboardView" class="dashboard-view" hidden>
+            <div class="view-heading">
+                <div>
+                    <p class="eyebrow">Decision support</p>
+                    <h2>Feedback analytics</h2>
+                    <p>Aggregated sentiment from the latest comments received through the portal.</p>
+                </div>
+                <div class="dashboard-heading-actions">
+                    <span class="dashboard-updated" id="dashboardUpdated">Waiting for data</span>
+                    <button type="button" id="refreshDashboard" class="btn-secondary">Refresh data</button>
+                </div>
+            </div>
+
+            <div class="dashboard-filters" aria-label="Analytics filters">
+                <label for="dashboardMinistry">Ministry
+                    <select id="dashboardMinistry" class="dashboard-filter-select">
+                        <option value="all">All ministries</option>
+                    </select>
+                </label>
+                <label for="dashboardSentiment">Sentiment
+                    <select id="dashboardSentiment" class="dashboard-filter-select">
+                        <option value="all">All sentiments</option>
+                        <option value="positive">Positive</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="negative">Negative</option>
+                        <option value="pending">Pending analysis</option>
+                    </select>
+                </label>
+                <span class="filter-context" id="filterContext">Showing all comments</span>
+            </div>
+
+            <div class="metric-grid" aria-label="Feedback summary">
+                <div class="metric-card metric-card-primary">
+                    <span class="metric-label">Total comments</span>
+                    <strong id="metricTotal">0</strong>
+                    <span class="metric-note">Loaded from the public feedback table</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Positive</span>
+                    <strong id="metricPositive">0%</strong>
+                    <span class="metric-note" id="metricPositiveCount">0 comments</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Neutral</span>
+                    <strong id="metricNeutral">0%</strong>
+                    <span class="metric-note" id="metricNeutralCount">0 comments</span>
+                </div>
+                <div class="metric-card metric-card-alert">
+                    <span class="metric-label">Negative</span>
+                    <strong id="metricNegative">0%</strong>
+                    <span class="metric-note" id="metricNegativeCount">0 comments</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Pending analysis</span>
+                    <strong id="metricPending">0</strong>
+                    <span class="metric-note">Awaiting sentiment processing</span>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <section class="dashboard-panel sentiment-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Sentiment distribution</h3>
+                            <p>Share of comments with a completed sentiment score.</p>
+                        </div>
+                    </div>
+                    <div class="distribution-chart" id="distributionChart"></div>
+                </section>
+                <section class="dashboard-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Top ministries</h3>
+                            <p>Where public feedback is concentrated.</p>
+                        </div>
+                    </div>
+                    <div class="ministry-list" id="ministryList"></div>
+                </section>
+            </div>
+
+            <section class="dashboard-panel trend-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Sentiment over time</h3>
+                        <p>Daily sentiment mix for the selected view.</p>
+                    </div>
+                    <div class="chart-legend" aria-label="Chart legend">
+                        <span><i class="legend-positive"></i>Positive</span>
+                        <span><i class="legend-neutral"></i>Neutral</span>
+                        <span><i class="legend-negative"></i>Negative</span>
+                    </div>
+                </div>
+                <div class="trend-summary" id="trendSummary"></div>
+                <div class="trend-chart" id="trendChart"></div>
+            </section>
+
+            <section class="dashboard-panel recent-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h3>Recent feedback signals</h3>
+                        <p>Latest comments requiring attention or review.</p>
+                    </div>
+                </div>
+                <div class="recent-list" id="recentList"></div>
+            </section>
+        </section>
+
         <!-- Left Column: Feedback Form -->
+        <div id="commentsView" class="comments-view">
         <div class="primary-column">
             <div class="form-panel">
                 <h2 class="form-panel-title">Submit your feedback</h2>
+
+                <section class="policy-brief" aria-live="polite">
+                    <div class="policy-brief-heading">
+                        <span class="eyebrow">Latest available policy</span>
+                        <span class="policy-placeholder">Placeholder data</span>
+                    </div>
+                    <h3 id="selectedPolicyTitle">Select a ministry to view its policy</h3>
+                    <p id="selectedPolicyText">The relevant ministry policy will appear here before you submit feedback.</p>
+                    <span id="selectedPolicyMeta" class="policy-brief-meta"></span>
+                </section>
 
                 <form id="commentForm">
                     <div class="form-group">
@@ -138,6 +261,8 @@
             </div>
         </section>
 
+        </div>
+
     </main>
 
     <!-- Footer -->
@@ -163,6 +288,7 @@
         const SUPABASE_URL = 'https://nmbiilbiyxgfsfusnzht.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tYmlpbGJpeXhnZnNmdXNuemh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMzIwMjQsImV4cCI6MjEwMjgwODAyNH0.MNGMaHkDVvnn_u6XV_JVX6Uo-Ec3S4GFFP6gRmA-g84';
         const TABLE_NAME = 'comments';
+        const POLICY_TABLE_NAME = 'policies';
 
         const MINISTRIES = [
             "Ministry of Agriculture and Farmers' Welfare",
@@ -224,6 +350,7 @@
 
         // --- State ---
         let comments = [];
+        let policies = [];
 
         // --- DOM refs ---
         const form = document.getElementById('commentForm');
@@ -235,6 +362,15 @@
         const commentCount = document.getElementById('commentCount');
         const exportBtn = document.getElementById('exportBtn');
         const clearBtn = document.getElementById('clearBtn');
+        const dashboardView = document.getElementById('dashboardView');
+        const commentsView = document.getElementById('commentsView');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const dashboardMinistry = document.getElementById('dashboardMinistry');
+        const dashboardSentiment = document.getElementById('dashboardSentiment');
+        const refreshDashboard = document.getElementById('refreshDashboard');
+        const selectedPolicyTitle = document.getElementById('selectedPolicyTitle');
+        const selectedPolicyText = document.getElementById('selectedPolicyText');
+        const selectedPolicyMeta = document.getElementById('selectedPolicyMeta');
 
         // --- Helper: set status message with CSS class ---
         function setStatus(message, type) {
@@ -292,6 +428,7 @@
             customOpt.addEventListener('click', function () {
                 ministrySelect.value = name;
                 customSelectTrigger.querySelector('span').textContent = name;
+                renderSelectedPolicy(name);
                 customSelectWrapper.classList.remove('open');
                 Array.from(customOptionsList.children).forEach(child => child.classList.remove('selected'));
                 customOpt.classList.add('selected');
@@ -465,6 +602,7 @@
                 ministrySelect.selectedIndex = 0;
                 document.querySelector('.custom-select-trigger span').textContent = '-- Select a Ministry --';
                 Array.from(document.querySelectorAll('.custom-option')).forEach(child => child.classList.remove('selected'));
+                renderSelectedPolicy('');
                 setStatus('Feedback submitted successfully.', 'success');
             } catch (err) {
                 setStatus('Failed to save: ' + err.message, 'error');
@@ -497,29 +635,246 @@
             commentCount.textContent = comments.length;
             exportBtn.disabled = comments.length === 0;
             clearBtn.disabled = comments.length === 0;
+            renderDashboard();
         }
+
+        function renderDashboard() {
+            const selectedMinistry = dashboardMinistry.value;
+            const selectedSentiment = dashboardSentiment.value;
+            const filteredComments = comments.filter(comment => {
+                const ministryMatches = selectedMinistry === 'all' || comment.ministry === selectedMinistry;
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                const sentimentMatches = selectedSentiment === 'all' || (selectedSentiment === 'pending' ? !sentiment : sentiment === selectedSentiment);
+                return ministryMatches && sentimentMatches;
+            });
+            const counts = { positive: 0, neutral: 0, negative: 0 };
+            comments.forEach(comment => {
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(counts, sentiment)) counts[sentiment]++;
+            });
+            const filteredCounts = { positive: 0, neutral: 0, negative: 0 };
+            filteredComments.forEach(comment => {
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(filteredCounts, sentiment)) filteredCounts[sentiment]++;
+            });
+            const analyzedCount = Object.values(filteredCounts).reduce((sum, count) => sum + count, 0);
+            const percentage = value => analyzedCount ? Math.round((value / analyzedCount) * 100) : 0;
+
+            document.getElementById('metricTotal').textContent = filteredComments.length;
+            document.getElementById('metricPending').textContent = filteredComments.length - analyzedCount;
+            ['positive', 'neutral', 'negative'].forEach(sentiment => {
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1)).textContent = percentage(filteredCounts[sentiment]) + '%';
+                document.getElementById('metric' + sentiment[0].toUpperCase() + sentiment.slice(1) + 'Count').textContent = filteredCounts[sentiment] + ' comments';
+            });
+            document.getElementById('filterContext').textContent = selectedMinistry === 'all' && selectedSentiment === 'all' ? 'Showing all comments' : 'Showing ' + filteredComments.length + ' filtered comments';
+
+            renderDistribution(filteredCounts, analyzedCount, percentage);
+
+            const ministries = {};
+            filteredComments.forEach(comment => {
+                const ministry = comment.ministry || 'Unassigned';
+                ministries[ministry] = (ministries[ministry] || 0) + 1;
+            });
+            const ministryEntries = Object.entries(ministries).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            document.getElementById('ministryList').innerHTML = ministryEntries.length ? ministryEntries.map(entry =>
+                '<div class="ministry-row"><span title="' + escapeHtml(entry[0]) + '">' + escapeHtml(entry[0]) + '</span><strong>' + entry[1] + '</strong></div>'
+            ).join('') : '<p class="dashboard-empty">No ministry data available yet.</p>';
+
+            const recent = filteredComments.slice(0, 4);
+            document.getElementById('recentList').innerHTML = recent.length ? recent.map(comment => {
+                const sentiment = String(comment.sentiment_type || 'processing').toLowerCase();
+                return '<div class="recent-row"><span class="recent-date">' + escapeHtml(comment.comment_date || 'Recent') + '</span><p>' + escapeHtml(comment.preprocessing || comment.original_text || '') + '</p><strong class="sentiment-' + sentiment + '">' + escapeHtml(sentiment) + '</strong></div>';
+            }).join('') : '<p class="dashboard-empty">Submit or load comments to see analytics.</p>';
+            renderTrend(filteredComments);
+            document.getElementById('dashboardUpdated').textContent = comments.length ? 'Updated just now' : 'Waiting for data';
+        }
+
+        function renderTrend(filteredComments) {
+            const dates = {};
+            filteredComments.forEach(comment => {
+                const date = comment.comment_date || 'Unknown date';
+                if (!dates[date]) dates[date] = { positive: 0, neutral: 0, negative: 0 };
+                const sentiment = String(comment.sentiment_type || '').toLowerCase();
+                if (Object.prototype.hasOwnProperty.call(dates[date], sentiment)) dates[date][sentiment]++;
+            });
+            const entries = Object.entries(dates).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
+            if (!entries.length) {
+                document.getElementById('trendSummary').innerHTML = '';
+                document.getElementById('trendChart').innerHTML = '<p class="dashboard-empty">No dated comments available for the trend.</p>';
+                return;
+            }
+
+            const firstEntry = entries[0][1];
+            const latestEntry = entries[entries.length - 1][1];
+            document.getElementById('trendSummary').innerHTML = ['positive', 'neutral', 'negative'].map(sentiment => {
+                const change = latestEntry[sentiment] - firstEntry[sentiment];
+                const direction = change > 0 ? 'increasing' : change < 0 ? 'decreasing' : 'stable';
+                const indicator = change > 0 ? '&#8593;' : change < 0 ? '&#8595;' : '&#8594;';
+                const changeText = change > 0 ? '+' + change : String(change);
+                return '<div class="trend-summary-item trend-summary-' + direction + '"><span class="trend-summary-name"><i class="legend-' + sentiment + '"></i>' + sentiment + '</span><strong>' + indicator + ' ' + direction + '</strong><small>' + changeText + ' comments</small></div>';
+            }).join('');
+
+            const chartWidth = 820;
+            const chartHeight = 280;
+            const padding = { top: 18, right: 24, bottom: 48, left: 42 };
+            const plotWidth = chartWidth - padding.left - padding.right;
+            const plotHeight = chartHeight - padding.top - padding.bottom;
+            const groupWidth = plotWidth / entries.length;
+            const xPosition = index => padding.left + groupWidth * (index + 0.5);
+            const yPosition = percentage => padding.top + plotHeight - (percentage / 100) * plotHeight;
+            const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
+                const y = padding.top + plotHeight * ratio;
+                const label = Math.round((1 - ratio) * 100) + '%';
+                return '<line class="chart-grid-line" x1="' + padding.left + '" y1="' + y + '" x2="' + (chartWidth - padding.right) + '" y2="' + y + '"></line><text class="chart-axis-label" x="' + (padding.left - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + label + '</text>';
+            }).join('');
+            const labelStep = Math.max(1, Math.ceil(entries.length / 6));
+            const dateLabels = entries.map((entry, index) => {
+                if (index % labelStep !== 0 && index !== entries.length - 1) return '';
+                const dateLabel = entry[0].length >= 10 ? entry[0].slice(5) : entry[0];
+                return '<text class="chart-date-label" x="' + xPosition(index) + '" y="' + (chartHeight - 16) + '" text-anchor="middle">' + escapeHtml(dateLabel) + '</text>';
+            }).join('');
+            const normalized = entries.map(entry => {
+                const total = Object.values(entry[1]).reduce((sum, count) => sum + count, 0) || 1;
+                const positive = entry[1].positive / total * 100;
+                const neutral = entry[1].neutral / total * 100;
+                return { date: entry[0], positive: positive, neutral: neutral, negative: 100 - positive - neutral };
+            });
+            const sentiments = ['positive', 'neutral', 'negative'];
+            const barWidth = Math.min(22, Math.max(8, groupWidth / 5));
+            const bars = normalized.map((entry, index) => sentiments.map((sentiment, sentimentIndex) => {
+                const value = entry[sentiment];
+                const height = value / 100 * plotHeight;
+                const x = xPosition(index) - barWidth * 1.8 + sentimentIndex * barWidth * 1.2;
+                const y = padding.top + plotHeight - height;
+                return '<rect class="chart-bar chart-bar-' + sentiment + '" x="' + x + '" y="' + y + '" width="' + barWidth + '" height="' + height + '" rx="2"><title>' + escapeHtml(entry.date) + ': ' + Math.round(value) + '% ' + sentiment + '</title></rect>';
+            }).join('')).join('');
+            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Positive, neutral, and negative sentiment percentages by date">' + gridLines + bars + dateLabels + '</svg>';
+        }
+
+        function renderDistribution(counts, analyzedCount, percentage) {
+            const totalDegrees = analyzedCount ? 360 : 0;
+            const positiveDegrees = analyzedCount ? counts.positive / analyzedCount * 360 : 0;
+            const neutralDegrees = analyzedCount ? counts.neutral / analyzedCount * 360 : 0;
+            const negativeStart = positiveDegrees + neutralDegrees;
+            const donutStyle = analyzedCount
+                ? 'background: conic-gradient(#1A5632 0deg ' + positiveDegrees + 'deg, #89938C ' + positiveDegrees + 'deg ' + negativeStart + 'deg, #A83232 ' + negativeStart + 'deg ' + totalDegrees + 'deg);'
+                : 'background: #EDEEE9;';
+            const legend = ['positive', 'neutral', 'negative'].map(sentiment =>
+                '<div class="distribution-legend-row"><span><i class="legend-swatch legend-' + sentiment + '"></i>' + sentiment + '</span><strong>' + percentage(counts[sentiment]) + '% <small>(' + counts[sentiment] + ')</small></strong></div>'
+            ).join('');
+            document.getElementById('distributionChart').innerHTML = '<div class="donut-wrap"><div class="donut-chart" style="' + donutStyle + '"><div class="donut-hole"><strong>' + analyzedCount + '</strong><span>analyzed</span></div></div></div><div class="distribution-legend">' + legend + '</div>';
+        }
+
+        function populateDashboardFilters() {
+            const currentValue = dashboardMinistry.value;
+            const ministries = [...new Set(comments.map(comment => comment.ministry).filter(Boolean))].sort();
+            dashboardMinistry.innerHTML = '<option value="all">All ministries</option>' + ministries.map(ministry => '<option value="' + escapeHtml(ministry) + '">' + escapeHtml(ministry) + '</option>').join('');
+            dashboardMinistry.value = ministries.includes(currentValue) ? currentValue : 'all';
+        }
+
+        navLinks.forEach(link => link.addEventListener('click', function () {
+            const showingDashboard = this.dataset.view === 'dashboardView';
+            dashboardView.hidden = !showingDashboard;
+            commentsView.hidden = showingDashboard;
+            navLinks.forEach(navLink => navLink.classList.toggle('active', navLink === this));
+        }));
+        dashboardMinistry.addEventListener('change', renderDashboard);
+        dashboardSentiment.addEventListener('change', renderDashboard);
+        refreshDashboard.addEventListener('click', loadCommentsFromSupabase);
 
         // --- Load existing comments from Supabase on load ---
         async function loadCommentsFromSupabase() {
             try {
-                const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + '?select=*&order=comment_id.desc&limit=50', {
+                const pageSize = 50;
+                const allComments = [];
+                let page = 0;
+
+                while (true) {
+                    const params = '?select=*&order=comment_id.desc&limit=' + pageSize + '&offset=' + (page * pageSize);
+                    const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE_NAME + params, {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+                        }
+                    });
+                    if (!res.ok) throw new Error('Could not load comments (' + res.status + ').');
+
+                    const data = await res.json();
+                    if (!Array.isArray(data) || data.length === 0) break;
+                    allComments.push(...data);
+                    if (data.length < pageSize) break;
+                    page++;
+                }
+
+                comments = allComments;
+                populateDashboardFilters();
+                renderComments();
+            } catch (err) {
+                console.warn('Could not load comments from Supabase:', err);
+            }
+        }
+
+        function readPolicyField(policy, fieldNames) {
+            const policyKeys = Object.keys(policy);
+            const matchingKey = policyKeys.find(key => fieldNames.includes(key.toLowerCase()));
+            return matchingKey ? policy[matchingKey] : '';
+        }
+
+        function normalizeMinistryName(name) {
+            return String(name || '').toLowerCase()
+                .replace(/&/g, 'and')
+                .replace(/[.'’']/g, '')
+                .replace(/[^a-z0-9]+/g, '')
+                .replace(/^ministryof/, '');
+        }
+
+        function findPolicyForMinistry(ministry) {
+            const selectedName = normalizeMinistryName(ministry);
+            return policies.find(policy => {
+                const policyName = normalizeMinistryName(readPolicyField(policy, ['ministry', 'ministry_name', 'department']));
+                return policyName && (policyName === selectedName || policyName.includes(selectedName) || selectedName.includes(policyName));
+            });
+        }
+
+        function renderSelectedPolicy(ministry) {
+            const policy = findPolicyForMinistry(ministry);
+            if (!ministry) {
+                selectedPolicyTitle.textContent = 'Select a ministry to view its policy';
+                selectedPolicyText.textContent = 'The relevant ministry policy will appear here before you submit feedback.';
+                selectedPolicyMeta.textContent = '';
+                return;
+            }
+            if (!policy) {
+                selectedPolicyTitle.textContent = 'No policy brief available';
+                selectedPolicyText.textContent = 'A placeholder policy has not been added for this ministry yet.';
+                selectedPolicyMeta.textContent = ministry;
+                return;
+            }
+            selectedPolicyTitle.textContent = readPolicyField(policy, ['policy_name', 'policy_title', 'title', 'name']) || 'Ministry policy brief';
+            selectedPolicyText.textContent = readPolicyField(policy, ['policy_text', 'description', 'summary', 'policy', 'details']) || 'This policy record is available as a reference for your feedback.';
+            const releaseDate = readPolicyField(policy, ['release_date', 'updated_at', 'last_updated', 'date']);
+            selectedPolicyMeta.textContent = releaseDate ? 'For ' + ministry + ' | Released: ' + releaseDate : ministry + ' | Placeholder policy record';
+        }
+
+        async function loadPoliciesFromSupabase() {
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/' + POLICY_TABLE_NAME + '?select=*', {
                     headers: {
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
                     }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data)) {
-                        comments = data;
-                        renderComments();
-                    }
-                }
+                if (!res.ok) throw new Error('Could not load policy records (' + res.status + ').');
+                const data = await res.json();
+                policies = Array.isArray(data) ? data : [];
+                renderSelectedPolicy(ministrySelect.value);
             } catch (err) {
-                console.warn('Could not load comments from Supabase:', err);
+                console.warn('Could not load policies from Supabase:', err);
             }
         }
+
         loadCommentsFromSupabase();
+        loadPoliciesFromSupabase();
 
         // --- Delete single comment (local only) ---
         function deleteComment(id) {
