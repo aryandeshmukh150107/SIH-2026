@@ -482,7 +482,7 @@ a:hover {
 
 .chart-line {
     fill: none;
-    stroke-width: 2.5;
+    stroke-width: 2.25;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
@@ -490,6 +490,10 @@ a:hover {
 .chart-line-positive { stroke: #1A5632; }
 .chart-line-neutral { stroke: #89938C; }
 .chart-line-negative { stroke: #A83232; }
+.chart-band { stroke: none; }
+.chart-band-positive { fill: rgba(26, 86, 50, 0.16); }
+.chart-band-neutral { fill: rgba(137, 147, 140, 0.14); }
+.chart-band-negative { fill: rgba(168, 50, 50, 0.12); }
 .chart-dot { stroke: #FFFFFF; stroke-width: 2.5; }
 .chart-dot-positive { fill: #1A5632; }
 .chart-dot-neutral { fill: #89938C; }

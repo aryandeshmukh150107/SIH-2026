@@ -702,13 +702,11 @@
             const padding = { top: 18, right: 24, bottom: 48, left: 42 };
             const plotWidth = chartWidth - padding.left - padding.right;
             const plotHeight = chartHeight - padding.top - padding.bottom;
-            const maximum = Math.max(1, ...entries.map(entry => Math.max(...Object.values(entry[1]))));
             const xPosition = index => padding.left + (entries.length === 1 ? plotWidth / 2 : index * plotWidth / (entries.length - 1));
-            const yPosition = value => padding.top + plotHeight - (value / maximum) * plotHeight;
-            const series = ['positive', 'neutral', 'negative'];
+            const yPosition = percentage => padding.top + plotHeight - (percentage / 100) * plotHeight;
             const gridLines = [0, 0.25, 0.5, 0.75, 1].map(ratio => {
                 const y = padding.top + plotHeight * ratio;
-                const label = Math.round(maximum * (1 - ratio));
+                const label = Math.round((1 - ratio) * 100) + '%';
                 return '<line class="chart-grid-line" x1="' + padding.left + '" y1="' + y + '" x2="' + (chartWidth - padding.right) + '" y2="' + y + '"></line><text class="chart-axis-label" x="' + (padding.left - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + label + '</text>';
             }).join('');
             const labelStep = Math.max(1, Math.ceil(entries.length / 6));
@@ -717,12 +715,35 @@
                 const dateLabel = entry[0].length >= 10 ? entry[0].slice(5) : entry[0];
                 return '<text class="chart-date-label" x="' + xPosition(index) + '" y="' + (chartHeight - 16) + '" text-anchor="middle">' + escapeHtml(dateLabel) + '</text>';
             }).join('');
-            const lines = series.map(sentiment => {
-                const points = entries.map((entry, index) => xPosition(index) + ',' + yPosition(entry[1][sentiment])).join(' ');
-                const dots = entries.map((entry, index) => '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(entry[1][sentiment]) + '" r="4"><title>' + escapeHtml(entry[0]) + ': ' + entry[1][sentiment] + ' ' + sentiment + '</title></circle>').join('');
-                return '<polyline class="chart-line chart-line-' + sentiment + '" points="' + points + '"></polyline>' + dots;
-            }).join('');
-            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="Sentiment trends over time">' + gridLines + dateLabels + lines + '</svg>';
+            const normalized = entries.map(entry => {
+                const total = Object.values(entry[1]).reduce((sum, count) => sum + count, 0) || 1;
+                const positive = entry[1].positive / total * 100;
+                const neutral = entry[1].neutral / total * 100;
+                return { date: entry[0], positive: positive, neutral: neutral, negative: 100 - positive - neutral };
+            });
+            const positivePoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(entry.positive)).join(' ');
+            const neutralPoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(entry.positive + entry.neutral)).join(' ');
+            const topPoints = normalized.map((entry, index) => xPosition(index) + ',' + yPosition(100)).join(' ');
+            const bottomPoints = normalized.slice().reverse().map((entry, reverseIndex) => {
+                const index = normalized.length - reverseIndex - 1;
+                return xPosition(index) + ',' + yPosition(0);
+            }).join(' ');
+            const positiveBand = positivePoints + ' ' + bottomPoints;
+            const neutralBand = neutralPoints + ' ' + normalized.slice().reverse().map((entry, reverseIndex) => {
+                const index = normalized.length - reverseIndex - 1;
+                return xPosition(index) + ',' + yPosition(normalized[index].positive);
+            }).join(' ');
+            const negativeBand = topPoints + ' ' + normalized.slice().reverse().map((entry, reverseIndex) => {
+                const index = normalized.length - reverseIndex - 1;
+                return xPosition(index) + ',' + yPosition(normalized[index].positive + normalized[index].neutral);
+            }).join(' ');
+            const markers = ['positive', 'neutral', 'negative'].map(sentiment => normalized.map((entry, index) => {
+                const value = sentiment === 'positive' ? entry.positive : sentiment === 'neutral' ? entry.positive + entry.neutral : 100;
+                return '<circle class="chart-dot chart-dot-' + sentiment + '" cx="' + xPosition(index) + '" cy="' + yPosition(value) + '" r="4"><title>' + escapeHtml(entry.date) + ': ' + Math.round(entry[sentiment]) + '% ' + sentiment + '</title></circle>';
+            }).join('')).join('');
+            const lines = '<polyline class="chart-line chart-line-positive" points="' + positivePoints + '"></polyline><polyline class="chart-line chart-line-neutral" points="' + neutralPoints + '"></polyline><polyline class="chart-line chart-line-negative" points="' + topPoints + '"></polyline>';
+            const bands = '<polygon class="chart-band chart-band-positive" points="' + positiveBand + '"></polygon><polygon class="chart-band chart-band-neutral" points="' + neutralBand + '"></polygon><polygon class="chart-band chart-band-negative" points="' + negativeBand + '"></polygon>';
+            document.getElementById('trendChart').innerHTML = '<svg class="trend-svg" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '" role="img" aria-label="100 percent stacked sentiment trends over time">' + gridLines + bands + dateLabels + lines + markers + '</svg>';
         }
 
         function renderDistribution(counts, analyzedCount, percentage) {
