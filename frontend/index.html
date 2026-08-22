@@ -438,7 +438,7 @@
                     preprocessing: cleanedText
                 };
 
-                const inserted = await insertToSupabase(row);
+                await insertToSupabase(row);
 
                 // 3. Start sentiment scoring in background
                 const sentimentUrl = `${API_BASE_URL}/run-sentiment`;
@@ -457,11 +457,8 @@
                     console.error(`[API Sentiment Exception] Failed to trigger ${sentimentUrl}:`, sentErr);
                 }
 
-                // Add to local list (use returned data if available)
-                const entry = (Array.isArray(inserted) && inserted[0]) ? inserted[0] : row;
-                entry._localId = Date.now();
-                comments.unshift(entry);
-                renderComments();
+                // Reload the saved row so the latest sentiment values appear immediately.
+                await loadCommentsFromSupabase();
 
                 // Reset form
                 commentBox.value = '';
