@@ -516,6 +516,50 @@ a:hover {
     gap: 0.3rem;
 }
 
+.trend-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.trend-summary-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.2rem 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border-left: 3px solid #89938C;
+    background: #F6F8F5;
+}
+
+.trend-summary-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #17201B;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.trend-summary-item strong {
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}
+
+.trend-summary-item small {
+    grid-column: 1 / -1;
+    color: #66706A;
+    font-size: 0.6875rem;
+}
+
+.trend-summary-increasing { border-left-color: #1A5632; }
+.trend-summary-increasing strong { color: #1A5632; }
+.trend-summary-decreasing { border-left-color: #A83232; }
+.trend-summary-decreasing strong { color: #A83232; }
+.trend-summary-stable strong { color: #66706A; }
+
 .panel-heading {
     border-bottom: 1px solid #EDEEE9;
     padding-bottom: 0.85rem;
@@ -1185,6 +1229,10 @@ a:hover {
 
     .chart-legend {
         white-space: normal;
+    }
+
+    .trend-summary {
+        grid-template-columns: 1fr;
     }
 
     .distribution-chart {

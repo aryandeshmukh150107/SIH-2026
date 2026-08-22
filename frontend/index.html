@@ -136,6 +136,7 @@
                         <span><i class="legend-negative"></i>Negative</span>
                     </div>
                 </div>
+                <div class="trend-summary" id="trendSummary"></div>
                 <div class="trend-chart" id="trendChart"></div>
             </section>
 
@@ -681,9 +682,20 @@
             });
             const entries = Object.entries(dates).sort((a, b) => a[0].localeCompare(b[0])).slice(-10);
             if (!entries.length) {
+                document.getElementById('trendSummary').innerHTML = '';
                 document.getElementById('trendChart').innerHTML = '<p class="dashboard-empty">No dated comments available for the trend.</p>';
                 return;
             }
+
+            const firstEntry = entries[0][1];
+            const latestEntry = entries[entries.length - 1][1];
+            document.getElementById('trendSummary').innerHTML = ['positive', 'neutral', 'negative'].map(sentiment => {
+                const change = latestEntry[sentiment] - firstEntry[sentiment];
+                const direction = change > 0 ? 'increasing' : change < 0 ? 'decreasing' : 'stable';
+                const indicator = change > 0 ? '&#8593;' : change < 0 ? '&#8595;' : '&#8594;';
+                const changeText = change > 0 ? '+' + change : String(change);
+                return '<div class="trend-summary-item trend-summary-' + direction + '"><span class="trend-summary-name"><i class="legend-' + sentiment + '"></i>' + sentiment + '</span><strong>' + indicator + ' ' + direction + '</strong><small>' + changeText + ' comments</small></div>';
+            }).join('');
 
             const chartWidth = 820;
             const chartHeight = 280;
